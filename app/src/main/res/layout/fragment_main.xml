@@ -1,0 +1,24 @@
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="io.github.instasketch.instasketch.fragments.MainFragment"
+    >
+
+    <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:id="@+id/SketchView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="This will be where the user sketches." />
+
+    <include
+        android:id="@+id/fab"
+        android:layout_gravity="bottom|right"
+        android:layout_margin="16dp"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        layout="@layout/material_fab"
+        />
+</FrameLayout>

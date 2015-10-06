@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--http://www.android4devs.com/2014/12/how-to-make-material-design-app.html-->
+<android.support.v7.widget.Toolbar
+    xmlns:android="http://schemas.android.com/apk/res/android"
+
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize"
+    android:background="@color/ColorPrimary"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark"
+    android:elevation="4dp">
+
+
+</android.support.v7.widget.Toolbar>
