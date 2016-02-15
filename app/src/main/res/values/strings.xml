@@ -13,7 +13,12 @@
 
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
-    <string name="title_activity_history">Historyy</string>
+    <string name="title_activity_history">History</string>
     <string name="title_activity_search">Search Results</string>
     <string name="title_activity_global_preferences">Settings</string>
+
+    <string name="action_erase">Eraser</string>
+    <string name="action_brushsize">Change Brush Size</string>
+    <string name="label_brush_size">Size: </string>
+    
 </resources>

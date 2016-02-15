@@ -10,12 +10,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.activities.SearchActivity;
+import io.github.instasketch.instasketch.dialogs.BrushSizeChooserFragment;
+import io.github.instasketch.instasketch.views.SketchView;
 
 
 /**
@@ -38,6 +42,9 @@ public class MainFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
+    private Toolbar sketchPalette;
+
+    private SketchView mSketchView;
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -67,6 +74,7 @@ public class MainFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
     }
 
     @Override
@@ -82,6 +90,19 @@ public class MainFragment extends Fragment {
                 startActivity(i);
             }
         });
+
+        sketchPalette = (Toolbar) view.findViewById(R.id.sketch_palette_toolbar);
+        sketchPalette.inflateMenu(R.menu.sketch_palette_menu);
+
+        sketchPalette.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                handleSketchPaletteAction(item.getItemId());
+                return false;
+            }
+        });
+
+        mSketchView = (SketchView) view.findViewById(R.id.sketch_view);
         return view;
     }
 
@@ -124,4 +145,29 @@ public class MainFragment extends Fragment {
         public void onFragmentInteraction(Uri uri);
     }
 
+//    The methods below handle the launching of fragments upon tapping on icons in the sketch palette
+    private void handleSketchPaletteAction(int itemId){
+        System.out.println("clicked "   +itemId);
+        switch (itemId){
+            case R.id.action_brushsize:
+                brushSizePicker();
+                break;
+            case R.id.action_erase:
+                break;
+        }
+    }
+
+    private void brushSizePicker(){
+        BrushSizeChooserFragment brushChooserDialog = BrushSizeChooserFragment.newInstance((int)
+                mSketchView.getLastBrushSize());
+        brushChooserDialog.setOnNewBrushSizeSelectedListener(new BrushSizeChooserFragment.OnNewBrushSizeSelectedListener() {
+            @Override
+            public void onNewBrushSizeSelected(float newBrushSize) {
+                System.out.println("new brush size!! "+newBrushSize);
+                mSketchView.setBrushSize(newBrushSize);
+                mSketchView.setLastBrushSize(newBrushSize);
+            }
+        });
+        brushChooserDialog.show(getFragmentManager(), "Dialog");
+    }
 }
