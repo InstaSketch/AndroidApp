@@ -16,6 +16,11 @@
             android:title="History"/>
 
         <item
+            android:id="@+id/drawer_dbmanager"
+            android:icon="@drawable/ic_database_24dp"
+            android:title="Image Database" />
+
+        <item
             android:id="@+id/drawer_settings"
             android:icon="@drawable/ic_action_settings"
             android:title="@string/navdrawer_settings"/>

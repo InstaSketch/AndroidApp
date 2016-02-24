@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.github.instasketch.instasketch" >
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -32,6 +33,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="io.github.instasketch.instasketch.activities.MainActivity" />
         </activity>
+
+        <provider
+            android:name=".database.ImageDatabaseContentProvider"
+            android:authorities="io.github.instasketch.instasketch.database.ImageDatabaseContentProvider"
+            />
     </application>
 
 </manifest>

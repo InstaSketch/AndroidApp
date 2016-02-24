@@ -16,7 +16,7 @@ import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.fragments.*;
 
 public class MainActivity extends AppCompatActivity implements HistoryFragment.OnFragmentInteractionListener,
-        MainFragment.OnFragmentInteractionListener {
+        MainFragment.OnFragmentInteractionListener, DatabaseFragment.OnFragmentInteractionListener {
 
     protected DrawerLayout mDrawerLayout;
     protected Toolbar mToolBar;
@@ -99,6 +99,18 @@ public class MainActivity extends AppCompatActivity implements HistoryFragment.O
             }
             menuItem.setChecked(true);
             setTitle(R.string.app_name);
+        }
+
+        if (itemID == R.id.drawer_dbmanager){
+
+            try {
+                fragment = DatabaseFragment.class.newInstance();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+            menuItem.setChecked(true);
+            setTitle(menuItem.getTitle());
         }
 
         if (itemID == R.id.drawer_history){
