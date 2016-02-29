@@ -49,10 +49,23 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    sourceSets {
+        main {
+            jni.srcDirs = []
+//            jniLibs.srcDirs = ["libs", "jniLibs"]
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            ndk {
+                moduleName "myjni"
+            }
         }
     }
 }

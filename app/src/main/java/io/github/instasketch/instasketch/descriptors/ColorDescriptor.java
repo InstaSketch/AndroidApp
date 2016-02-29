@@ -16,6 +16,9 @@ import java.util.List;
 /**
  * Created by transfusion on 16-2-23.
  */
+
+//DO NOT USE THIS CLASS IN FAVOR OF THE NATIVE CPP IMPLEMENTATION
+
 public class ColorDescriptor {
     private int h_bins, s_bins, v_bins;
 

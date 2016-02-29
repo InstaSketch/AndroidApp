@@ -1,0 +1,29 @@
+apply plugin: 'com.android.model.library'
+model {
+    android {
+        compileSdkVersion = 23
+        buildToolsVersion = "23.0.1"
+
+        defaultConfig.with {
+            minSdkVersion.apiLevel = 16 
+            targetSdkVersion.apiLevel = 23
+        }
+    }
+
+    android.buildTypes {
+        release {
+            minifyEnabled = false
+        }
+        debug{
+            minifyEnabled = false
+        }
+    }
+   android.sources {
+       main.manifest.source.srcDirs +=  "."
+       main.res.source.srcDirs +=  "res"
+       main.aidl.source.srcDirs +=  "src"
+       main.java.source.srcDirs +=  "src"
+   }
+
+}
+

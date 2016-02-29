@@ -38,6 +38,11 @@
             android:name=".database.ImageDatabaseContentProvider"
             android:authorities="io.github.instasketch.instasketch.database.ImageDatabaseContentProvider"
             />
+
+        <service
+            android:name="io.github.instasketch.instasketch.services.ImageDatabaseIntentService"
+            android:exported="false"
+            />
     </application>
 
 </manifest>

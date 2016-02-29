@@ -7,4 +7,8 @@
         <item name="colorPrimaryDark">@color/ColorPrimaryDark</item>
     </style>
 
+    <style name="ColoredButton" parent="Widget.AppCompat.Button">
+        <item name="colorButtonNormal">@color/ColorPrimary</item>
+    </style>
+
 </resources>

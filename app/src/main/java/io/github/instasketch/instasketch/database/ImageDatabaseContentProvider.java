@@ -41,8 +41,8 @@ public class ImageDatabaseContentProvider extends ContentProvider {
     }
 
     private void checkColumns(String[] projection){
-        String[] available = {ImageDatabaseHelper.KEY_PATH, ImageDatabaseHelper.KEY_LOCAL_STRUCTURAL_DESCRIPTOR,
-        ImageDatabaseHelper.KEY_GLOBAL_STRUCTURAL_DESCRIPTOR};
+        String[] available = {ImageDatabaseHelper.KEY_ID, ImageDatabaseHelper.KEY_PATH, ImageDatabaseHelper.KEY_LOCAL_STRUCTURAL_DESCRIPTOR,
+        ImageDatabaseHelper.KEY_GLOBAL_STRUCTURAL_DESCRIPTOR, ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR};
         if (projection != null){
             Set<String> requestedColumns = new HashSet<String>(Arrays.asList(projection));
             Set<String> availableColumns = new HashSet<String>(Arrays.asList(available));
@@ -72,7 +72,7 @@ public class ImageDatabaseContentProvider extends ContentProvider {
                 break;
             case IMAGE_ID:
                 // adding the ID to the original query
-                queryBuilder.appendWhere(ImageDatabaseHelper.KEY_PATH + "="
+                queryBuilder.appendWhere(ImageDatabaseHelper.KEY_ID + "="
                         + uri.getLastPathSegment());
                 break;
             default:

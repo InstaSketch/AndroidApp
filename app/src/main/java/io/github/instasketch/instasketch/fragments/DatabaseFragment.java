@@ -1,6 +1,7 @@
 package io.github.instasketch.instasketch.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -17,14 +18,13 @@ import android.database.Cursor;
 import android.widget.TextView;
 
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.highgui.Highgui;
-import org.w3c.dom.Text;
 
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.database.ImageDatabaseContentProvider;
 import io.github.instasketch.instasketch.database.ImageDatabaseHelper;
+import io.github.instasketch.instasketch.services.ImageDatabaseIntentService;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -48,6 +48,11 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
     static {
         System.loadLibrary("myjni");
     }
+
+    public native String getMessage();
+
+    public native void getMat(long emptyMatAddr);
+//        replaces the internal reference to the underlying native object of the argument.
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -93,27 +98,19 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
         super.onCreate(savedInstanceState);
 //        mResolver = getContext().getContentResolver();
         String[] projection = {MediaStore.Images.Media.DATA};
-        Cursor mCursor = getContext().getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, MediaStore.Images.Media.DEFAULT_SORT_ORDER);
+        Log.i("Test JNI Interface", getMessage());
 
-        Log.i("cursor.getCount()) :", mCursor.getCount() + "");
-
-        String TAG = "Image DB: ";
-        mCursor.moveToFirst();
-        /*while(!mCursor.isAfterLast()) {
-            Log.d(TAG, " - _ID : " + mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media._ID)));
-            Log.d(TAG, " - File Name : " + mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)));
-            Log.d(TAG, " - File Path : " + mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media.DATA)));
-            mCursor.moveToNext();
-        }*/
         if (!OpenCVLoader.initDebug()) {
             // Handle initialization error
         }
         else {
-            Mat m = Highgui.imread(mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media.DATA)));
-            Log.i("read img", m.size().toString());
-//            Log.i("KMeans ", Core.kmeans());
+
         }
-        mCursor.close();
+//        mCursor.close();
+
+        Intent testIntent = new Intent(DatabaseFragment.this.getActivity(), ImageDatabaseIntentService.class);
+        testIntent.putExtra(ImageDatabaseIntentService.REQUEST, ImageDatabaseIntentService.REPOPULATE_DB);
+        DatabaseFragment.this.getActivity().startService(testIntent);
 
     }
 

@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,18 +10,37 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:text="@string/hello_blank_fragment" />-->
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_vertical|center_horizontal">
+        android:layout_height="fill_parent"
+        android:layout_centerInParent="true"
+        android:gravity="center">
+        <TextView
+            android:id="@+id/db_rows"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_centerHorizontal="true"
 
-    </LinearLayout>
+            android:textSize = "50sp"/>
 
-    <TextView
-        android:id="@+id/db_rows"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center" />
+        <TextView
+            android:id="@+id/db_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/db_rows"
+            android:textSize = "20sp"
+            android:text = "images indexed."/>
 
-</LinearLayout>
+        <Button
+            android:theme="@style/ColoredButton"
+            android:layout_width="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/db_text"
+            android:text="Repopulate"
+            android:layout_marginTop="10dp"
+            android:textColor="#FFFFFF"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>
