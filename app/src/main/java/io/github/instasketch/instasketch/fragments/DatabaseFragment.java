@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -15,6 +16,7 @@ import android.view.ViewGroup;
 
 import android.provider.MediaStore;
 import android.database.Cursor;
+import android.widget.Button;
 import android.widget.TextView;
 
 import org.opencv.android.OpenCVLoader;
@@ -24,6 +26,7 @@ import org.opencv.highgui.Highgui;
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.database.ImageDatabaseContentProvider;
 import io.github.instasketch.instasketch.database.ImageDatabaseHelper;
+import io.github.instasketch.instasketch.receivers.ImageDatabaseResultReceiver;
 import io.github.instasketch.instasketch.services.ImageDatabaseIntentService;
 
 /**
@@ -40,6 +43,12 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
     private OnFragmentInteractionListener mListener;
 
     private TextView rowCountView;
+
+    public ImageDatabaseResultReceiver dbStatusReceiver;
+
+    public static final int POPULATE_PROGRESS = 0;
+    public static final int POPULATE_COMPLETED = 1;
+
 
     public DatabaseFragment() {
         // Required empty public constructor
@@ -67,7 +76,6 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        System.out.println(data);
         rowCountView = (TextView) getActivity().findViewById(R.id.db_rows);
         rowCountView.setText(String.valueOf(data.getCount()));
     }
@@ -81,12 +89,9 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
      * @return A new instance of fragment DatabaseFragment.
      */
-    // TODO: Rename and change types and number of parameters
-    public static DatabaseFragment newInstance(String param1, String param2) {
+    public static DatabaseFragment newInstance() {
         DatabaseFragment fragment = new DatabaseFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
@@ -96,7 +101,6 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        mResolver = getContext().getContentResolver();
         String[] projection = {MediaStore.Images.Media.DATA};
         Log.i("Test JNI Interface", getMessage());
 
@@ -106,12 +110,8 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
         else {
 
         }
-//        mCursor.close();
-
-        Intent testIntent = new Intent(DatabaseFragment.this.getActivity(), ImageDatabaseIntentService.class);
-        testIntent.putExtra(ImageDatabaseIntentService.REQUEST, ImageDatabaseIntentService.REPOPULATE_DB);
-        DatabaseFragment.this.getActivity().startService(testIntent);
-
+//        should be moved into onCreateView if manipulating UI Views
+        setupServiceReceiver();
     }
 
     private static final int IMAGE_LOADER = 0;
@@ -129,9 +129,44 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
 
         getLoaderManager().initLoader(IMAGE_LOADER, null, this);
 
+        Button repopulateBtn = (Button) view.findViewById(R.id.btn_repopulate);
+
+        repopulateBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent testIntent = new Intent(DatabaseFragment.this.getActivity(), ImageDatabaseIntentService.class);
+                Log.i("Receiver Type: ", dbStatusReceiver.toString());
+                testIntent.putExtra(ImageDatabaseIntentService.RECEIVER_KEY, dbStatusReceiver);
+                testIntent.putExtra(ImageDatabaseIntentService.REQUEST, ImageDatabaseIntentService.REQ_REPOPULATE_DB);
+                DatabaseFragment.this.getActivity().startService(testIntent);
+            }
+        });
         return view;
 
     }
+
+    private void setupServiceReceiver(){
+        this.dbStatusReceiver = new ImageDatabaseResultReceiver(new Handler());
+
+        this.dbStatusReceiver.setReceiver(new ImageDatabaseResultReceiver.Receiver(){
+            @Override
+            public void onReceiveResult(int resultCode, Bundle resultData){
+                if (resultCode == POPULATE_PROGRESS ){
+                    int imgs = resultData.getInt(ImageDatabaseIntentService.STATUS_POPULATE_PROGRESS_KEY);
+                    Log.i("Pop in progress: ", String.valueOf(imgs));
+                }
+                else if (resultCode == POPULATE_COMPLETED){
+                    int imgCount = resultData.getInt("images");
+                    Log.i("Finished populating, ", String.valueOf(imgCount));
+                }
+            }
+        });
+    }
+
+
+
+
+
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {

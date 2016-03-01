@@ -9,7 +9,7 @@ import android.os.ResultReceiver;
  * Created by transfusion on 16-2-29.
  */
 @SuppressLint("ParcelCreator")
-public class ImageDatabaseResultReceiver extends ResultReceiver{
+public class ImageDatabaseResultReceiver extends ResultReceiver {
 //    https://github.com/codepath/android_guides/wiki/Starting-Background-Services
 
     private Receiver receiver;

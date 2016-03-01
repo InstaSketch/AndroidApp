@@ -32,6 +32,7 @@
             android:text = "images indexed."/>
 
         <Button
+            android:id="@+id/btn_repopulate"
             android:theme="@style/ColoredButton"
             android:layout_width="wrap_content"
             android:layout_centerHorizontal="true"

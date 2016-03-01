@@ -1,11 +1,51 @@
-apply plugin: 'com.android.model.library'
+apply plugin: 'android-library'
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.5.0'
+    }
+}
+
+android {
+    compileSdkVersion = 23
+    buildToolsVersion = "23.0.1"
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 23
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false
+        }
+        debug {
+            minifyEnabled = false
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            resources.srcDirs = ['src']
+            res.srcDirs = ['res']
+            aidl.srcDirs = ['src']
+        }
+    }
+}
+
+/*apply plugin: 'com.android.model.library'
 model {
     android {
         compileSdkVersion = 23
         buildToolsVersion = "23.0.1"
 
         defaultConfig.with {
-            minSdkVersion.apiLevel = 16 
+            minSdkVersion.apiLevel = 16
             targetSdkVersion.apiLevel = 23
         }
     }
@@ -14,16 +54,15 @@ model {
         release {
             minifyEnabled = false
         }
-        debug{
+        debug {
             minifyEnabled = false
         }
     }
-   android.sources {
-       main.manifest.source.srcDirs +=  "."
-       main.res.source.srcDirs +=  "res"
-       main.aidl.source.srcDirs +=  "src"
-       main.java.source.srcDirs +=  "src"
-   }
+    android.sources {
+        main.manifest.source.srcDirs += "."
+        main.res.source.srcDirs += "res"
+        main.aidl.source.srcDirs += "src"
+        main.java.source.srcDirs += "src"
+    }
 
-}
-
+}*/

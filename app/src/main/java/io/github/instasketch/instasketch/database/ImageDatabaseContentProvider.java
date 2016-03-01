@@ -122,11 +122,11 @@ public class ImageDatabaseContentProvider extends ContentProvider {
             case IMAGE_ID:
                 String id = uri.getLastPathSegment();
                 if (TextUtils.isEmpty(selection)){
-                    rowsDeleted = sqlDB.delete(ImageDatabaseHelper.TABLE_IMAGES, ImageDatabaseHelper.KEY_PATH + "=" + id, null);
+                    rowsDeleted = sqlDB.delete(ImageDatabaseHelper.TABLE_IMAGES, ImageDatabaseHelper.KEY_ID + "=" + id, null);
 
                 }
                 else {
-                    rowsDeleted = sqlDB.delete(ImageDatabaseHelper.TABLE_IMAGES, ImageDatabaseHelper.KEY_PATH + "=" + id + " and "+selection, selectionArgs);
+                    rowsDeleted = sqlDB.delete(ImageDatabaseHelper.TABLE_IMAGES, ImageDatabaseHelper.KEY_ID + "=" + id + " and "+selection, selectionArgs);
                 }
                 break;
             default:
