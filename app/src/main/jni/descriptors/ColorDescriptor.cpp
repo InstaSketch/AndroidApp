@@ -62,6 +62,10 @@ cv::Mat ColorDescriptor::histogram(cv::Mat image, cv::Mat mask){
 }
 
 std::vector<float> ColorDescriptor::describe(cv::Mat image){
+    if (image.empty()){
+        return std::vector<float>();
+    }
+
     cv::cvtColor(image, image, CV_BGR2HSV);
 
     int rows = image.rows;

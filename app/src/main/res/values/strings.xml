@@ -20,5 +20,6 @@
     <string name="action_erase">Eraser</string>
     <string name="action_brushsize">Change Brush Size</string>
     <string name="label_brush_size">Size: </string>
+    <string name="title_activity_album_picker">AlbumPickerActivity</string>
 
 </resources>

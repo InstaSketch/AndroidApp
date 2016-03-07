@@ -1,6 +1,8 @@
 package io.github.instasketch.instasketch.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -21,7 +23,7 @@ public class GlobalPreferencesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_preferences);
 
         getFragmentManager().beginTransaction().replace(R.id.prefScreenFrame, new MyPreferenceFragment()).commit();
-        mToolBar = (Toolbar) findViewById(R.id.toolbar);
+        mToolBar = (Toolbar) findViewById(R.id.preferences_toolbar);
         setSupportActionBar(mToolBar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -47,7 +49,16 @@ public class GlobalPreferencesActivity extends AppCompatActivity {
         public void onCreate(final Bundle savedInstanceState){
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.global_preferences);
+            Preference albums = (Preference) findPreference("albums");
 
+            albums.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    Intent i = new Intent(getActivity(), AlbumPickerActivity.class);
+                    startActivity(i);
+                    return false;
+                }
+            });
         }
     }
 }

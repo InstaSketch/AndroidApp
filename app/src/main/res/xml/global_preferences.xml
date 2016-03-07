@@ -7,4 +7,7 @@
         android:defaultValue="false"
         android:summary="This option if selected will allow the application to check for latest versions."
         android:key="applicationUpdates" />
+    <Preference android:title="Albums"
+        android:key="albums"
+        android:summary="Pick the albums that you want indexed." />
 </PreferenceScreen>

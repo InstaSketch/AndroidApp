@@ -1,11 +1,11 @@
 package io.github.instasketch.instasketch.services;
 
 import android.app.IntentService;
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.database.Cursor;
@@ -14,17 +14,17 @@ import android.util.Log;
 import org.opencv.core.Mat;
 import org.opencv.highgui.Highgui;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import io.github.instasketch.instasketch.activities.AlbumPickerActivity;
 import io.github.instasketch.instasketch.database.ImageDatabaseContentProvider;
 import io.github.instasketch.instasketch.database.ImageDatabaseHelper;
 import io.github.instasketch.instasketch.descriptors.ColorDescriptorNative;
-import io.github.instasketch.instasketch.receivers.ImageDatabaseResultReceiver;
+import io.github.instasketch.instasketch.fragments.DatabaseFragment;
 
 
 /**
@@ -39,6 +39,7 @@ public class ImageDatabaseIntentService extends IntentService {
      */
 
     public static final int REQ_REPOPULATE_DB = 0;
+    public static final int REQ_IMAGE_BUCKETS = 1;
 
     public static final String REQUEST = "request";
 
@@ -57,6 +58,7 @@ public class ImageDatabaseIntentService extends IntentService {
         super(name);
     }
 
+    public static volatile boolean isRunning = false;
     @Override
     protected void onHandleIntent(Intent intent) {
         int n = intent.getIntExtra(REQUEST, REQ_REPOPULATE_DB);
@@ -64,10 +66,50 @@ public class ImageDatabaseIntentService extends IntentService {
 
         switch(n){
             case REQ_REPOPULATE_DB:
+//                Bundle notifyUI = new Bundle();
+                receiver.send(DatabaseFragment.POPULATE_STARTED, Bundle.EMPTY);
+                isRunning = true;
                 repopulateEntireDB();
+                break;
+            case REQ_IMAGE_BUCKETS:
+                getImageBuckets();
+                isRunning = true;
+                break;
         }
     }
 
+
+    private void getImageBuckets(){
+        String[] projection = { MediaStore.Images.Media._ID, MediaStore.Images.Media.BUCKET_DISPLAY_NAME };
+
+        Map<String, Integer> buckets = new HashMap<String, Integer>();
+
+        Cursor c = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, null, null, null);
+        if (c.getCount() > 0){
+            c.moveToFirst();
+            do {
+                String bucketDisplayName = c.getString(c.getColumnIndex(MediaStore.Images.Media.BUCKET_DISPLAY_NAME));
+                if(!buckets.containsKey(bucketDisplayName)) {
+                    buckets.put(bucketDisplayName, 1);
+
+                }
+                else {
+                    buckets.put(bucketDisplayName, buckets.get(bucketDisplayName) + 1);
+                }
+            }
+            while (c.moveToNext());
+        }
+        c.close();
+        ArrayList<AlbumPickerActivity.BucketReference> l = new ArrayList<AlbumPickerActivity.BucketReference>();
+        for (Map.Entry<String, Integer> entry : buckets.entrySet()){
+            l.add(new AlbumPickerActivity.BucketReference(entry.getKey(), entry.getValue()));
+        }
+        Bundle b = new Bundle();
+        b.putParcelableArrayList(AlbumPickerActivity.ALBUMS_LIST, l);
+        receiver.send(AlbumPickerActivity.POPULATE_FINISHED, b);
+        isRunning = false;
+
+    }
 //    Methods below all interface with MediaStore and ImageDatabaseContentProvider.
 
     private void repopulateEntireDB() {
@@ -89,18 +131,21 @@ public class ImageDatabaseIntentService extends IntentService {
             Mat m = Highgui.imread(filePath);
 //            Log.i("read img", m.size().toString());
             float[] colorDesc = c.getDesc(m);
-//            Log.i("got desc", String.valueOf(colorDesc.length));
-            ContentValues values = new ContentValues();
-            values.put(ImageDatabaseHelper.KEY_PATH, filePath);
-            try {
-                values.put(ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR, c.serializeFloatArr(colorDesc));
-            } catch (IOException e) {
-                e.printStackTrace();
+            m.release();
+            if (!(colorDesc.length == 0)){
+                ContentValues values = new ContentValues();
+                values.put(ImageDatabaseHelper.KEY_PATH, filePath);
+                try {
+                    values.put(ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR, c.serializeFloatArr(colorDesc));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Uri todoUri = getContentResolver().insert(ImageDatabaseContentProvider.CONTENT_URI, values);
             }
-            Uri todoUri = getContentResolver().insert(ImageDatabaseContentProvider.CONTENT_URI, values);
+//            Log.i("got desc", String.valueOf(colorDesc.length));
             mCursor.moveToNext();
         }
-
+        isRunning = false;
 
     }
 }

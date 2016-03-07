@@ -6,6 +6,7 @@
     <integer name="medium_size">20</integer>
     <integer name="small_size">10</integer>
     <integer name="min_size">0</integer>
-    
+
     <integer name="brush_max_size">40</integer>
+    <dimen name="fab_margin">16dp</dimen>
 </resources>

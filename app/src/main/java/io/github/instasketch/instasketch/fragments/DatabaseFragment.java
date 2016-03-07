@@ -23,6 +23,8 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 import org.opencv.highgui.Highgui;
 
+import java.util.HashMap;
+
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.database.ImageDatabaseContentProvider;
 import io.github.instasketch.instasketch.database.ImageDatabaseHelper;
@@ -43,12 +45,15 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
     private OnFragmentInteractionListener mListener;
 
     private TextView rowCountView;
+    private Button repopulateBtn;
 
     public ImageDatabaseResultReceiver dbStatusReceiver;
 
-    public static final int POPULATE_PROGRESS = 0;
-    public static final int POPULATE_COMPLETED = 1;
+    public static final int POPULATE_STARTED = 0;
+    public static final int POPULATE_PROGRESS = 1;
+    public static final int POPULATE_COMPLETED = 2;
 
+//    public static final int RECEIVER = -1;
 
     public DatabaseFragment() {
         // Required empty public constructor
@@ -111,7 +116,13 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
 
         }
 //        should be moved into onCreateView if manipulating UI Views
-        setupServiceReceiver();
+
+        if (savedInstanceState != null){
+            this.dbStatusReceiver = savedInstanceState.getParcelable(ImageDatabaseIntentService.RECEIVER_KEY);
+        }
+        else {
+            setupServiceReceiver();
+        }
     }
 
     private static final int IMAGE_LOADER = 0;
@@ -129,20 +140,32 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
 
         getLoaderManager().initLoader(IMAGE_LOADER, null, this);
 
-        Button repopulateBtn = (Button) view.findViewById(R.id.btn_repopulate);
+        repopulateBtn = (Button) view.findViewById(R.id.btn_repopulate);
+
+        if (ImageDatabaseIntentService.isRunning){
+            repopulateBtn.setAlpha(.5f);
+            repopulateBtn.setEnabled(false);
+        }
 
         repopulateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent testIntent = new Intent(DatabaseFragment.this.getActivity(), ImageDatabaseIntentService.class);
-                Log.i("Receiver Type: ", dbStatusReceiver.toString());
-                testIntent.putExtra(ImageDatabaseIntentService.RECEIVER_KEY, dbStatusReceiver);
-                testIntent.putExtra(ImageDatabaseIntentService.REQUEST, ImageDatabaseIntentService.REQ_REPOPULATE_DB);
-                DatabaseFragment.this.getActivity().startService(testIntent);
+            Intent testIntent = new Intent(DatabaseFragment.this.getActivity(), ImageDatabaseIntentService.class);
+            Log.i("Receiver Type: ", dbStatusReceiver.toString());
+            testIntent.putExtra(ImageDatabaseIntentService.RECEIVER_KEY, dbStatusReceiver);
+            testIntent.putExtra(ImageDatabaseIntentService.REQUEST, ImageDatabaseIntentService.REQ_REPOPULATE_DB);
+            DatabaseFragment.this.getActivity().startService(testIntent);
             }
         });
+
         return view;
 
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState){
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(ImageDatabaseIntentService.RECEIVER_KEY, this.dbStatusReceiver);
     }
 
     private void setupServiceReceiver(){
@@ -151,20 +174,22 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
         this.dbStatusReceiver.setReceiver(new ImageDatabaseResultReceiver.Receiver(){
             @Override
             public void onReceiveResult(int resultCode, Bundle resultData){
-                if (resultCode == POPULATE_PROGRESS ){
-                    int imgs = resultData.getInt(ImageDatabaseIntentService.STATUS_POPULATE_PROGRESS_KEY);
-                    Log.i("Pop in progress: ", String.valueOf(imgs));
-                }
-                else if (resultCode == POPULATE_COMPLETED){
-                    int imgCount = resultData.getInt("images");
-                    Log.i("Finished populating, ", String.valueOf(imgCount));
-                }
+            if (resultCode == POPULATE_STARTED){
+                repopulateBtn.setAlpha(.5f);
+                repopulateBtn.setEnabled(false);
+            }
+            if (resultCode == POPULATE_PROGRESS ){
+                int imgs = resultData.getInt(ImageDatabaseIntentService.STATUS_POPULATE_PROGRESS_KEY);
+                Log.i("Pop in progress: ", String.valueOf(imgs));
+            }
+            else if (resultCode == POPULATE_COMPLETED){
+                int imgCount = resultData.getInt("images");
+                repopulateBtn.setEnabled(true);
+                Log.i("Finished populating, ", String.valueOf(imgCount));
+            }
             }
         });
     }
-
-
-
 
 
 
