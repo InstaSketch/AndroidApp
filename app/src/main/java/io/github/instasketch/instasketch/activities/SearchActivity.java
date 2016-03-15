@@ -4,9 +4,11 @@ package io.github.instasketch.instasketch.activities;
  * Created by transfusion on 15-10-6.
  */
 
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -20,13 +22,16 @@ import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.ServerAPI.*;
 import io.github.instasketch.instasketch.adapters.RecyclerViewAdapter;
 
+import io.github.instasketch.instasketch.adapters.SearchFragmentPagerAdapter;
+import io.github.instasketch.instasketch.database.SearchResult;
+import io.github.instasketch.instasketch.fragments.SearchResultFragment;
 import retrofit.Call;
 import retrofit.Callback;
 import retrofit.GsonConverterFactory;
 import retrofit.Response;
 import retrofit.Retrofit;
 
-public class SearchActivity extends AppCompatActivity {
+public class SearchActivity extends AppCompatActivity implements SearchResultFragment.OnFragmentInteractionListener, SearchResultFragment.resultFragmentInit {
 
     Random random = new Random();
 
@@ -35,19 +40,59 @@ public class SearchActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private RecyclerViewAdapter mRecyclerViewAdapter;
 
+    public static final String INPUT_IMAGE_URI = "INPUT_IMAGE_URI";
+    public static final String INPUT_THUMBNAIL_URI = "INPUT_THUMBNAIL_URI";
+    public static final String INPUT_IS_SKETCH = "INPUT_IS_SKETCH";
+
+    private boolean isSketch;
+    private Uri queryImageURI;
+    private Uri queryThumbnailURI;
+
     protected Toolbar mToolBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
-        mRecyclerView = (RecyclerView) findViewById(R.id.searchResults);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        Bundle args = getIntent().getExtras();
+        if(!args.getBoolean(INPUT_IS_SKETCH)){
+            isSketch = false;
+            queryImageURI = args.getParcelable(INPUT_IMAGE_URI);
+            queryThumbnailURI = args.getParcelable(INPUT_THUMBNAIL_URI);
+        }
+
+        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+        viewPager.setAdapter(new SearchFragmentPagerAdapter(getSupportFragmentManager(),
+                SearchActivity.this));
+
+        // Give the TabLayout the ViewPager
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
+        tabLayout.setupWithViewPager(viewPager);
+
+        /*mRecyclerView = (RecyclerView) findViewById(R.id.searchResults);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));*/
 
         mToolBar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolBar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        populateSearchResults();
+//        populateSearchResults();
+    }
+
+
+    @Override
+    public Uri getQueryImageURI() {
+        return queryImageURI;
+    }
+
+    @Override
+    public Uri getQueryThumbnailURI(){
+        return queryThumbnailURI;
+    }
+
+    @Override
+    public boolean isSketch(){
+        return isSketch;
     }
 
     protected void populateSearchResults(){
@@ -62,7 +107,7 @@ public class SearchActivity extends AppCompatActivity {
                 searchResultList = new ArrayList<>();
                 SearchResultsModel s = response.body();
                 for (ImageModel i : s.data) {
-                    if (i.objURL != null){
+                    if (i.objURL != null) {
                         SearchResult result = new SearchResult();
                         result.setThumbnailImageUrl(i.objURL);
                         result.setSimilarityIndex(random.nextInt(10));
@@ -100,4 +145,10 @@ public class SearchActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
+
 }

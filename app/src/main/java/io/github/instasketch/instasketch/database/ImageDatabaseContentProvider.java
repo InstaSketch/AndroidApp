@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -107,6 +108,32 @@ public class ImageDatabaseContentProvider extends ContentProvider {
         }
         getContext().getContentResolver().notifyChange(uri, null);
         return Uri.parse(BASE_PATH + "/" + id);
+    }
+
+    @Override
+//    http://stackoverflow.com/questions/12730908/how-to-use-bulkinsert-function-in-android
+    public int bulkInsert(Uri uri, ContentValues[] values){
+        int uriType = sURIMatcher.match(uri);
+        SQLiteDatabase sqlDB = database.getWritableDatabase();
+        switch(uriType){
+            case IMAGES:
+                int numInserted = 0;
+                sqlDB.beginTransaction();
+                long newID;
+                for (ContentValues cv:values){
+                    if(cv != null){
+                        newID = sqlDB.insert(ImageDatabaseHelper.TABLE_IMAGES, null, cv);
+                    }
+                }
+                sqlDB.setTransactionSuccessful();
+                getContext().getContentResolver().notifyChange(uri, null);
+                numInserted = values.length;
+                sqlDB.endTransaction();
+                return numInserted;
+            default:
+                throw new IllegalArgumentException("Unknown URI: " + uri);
+        }
+
     }
 
     @Override

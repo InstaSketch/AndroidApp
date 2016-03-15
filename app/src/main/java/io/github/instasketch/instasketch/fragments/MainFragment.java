@@ -5,12 +5,16 @@ package io.github.instasketch.instasketch.fragments;
  */
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,29 +37,16 @@ import io.github.instasketch.instasketch.views.SketchView;
  * create an instance of this fragment.
  */
 public class MainFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static  final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     private OnFragmentInteractionListener mListener;
 
     private Toolbar sketchPalette;
 
     private SketchView mSketchView;
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment MainFragment.
-     */
-    // TODO: Rename and change types and number of parameters
+
+    static final int PICK_PICTURE = 1;
+
+/*    // TODO: Rename and change types and number of parameters
     public static MainFragment newInstance(String param1, String param2) {
         MainFragment fragment = new MainFragment();
         Bundle args = new Bundle();
@@ -63,7 +54,7 @@ public class MainFragment extends Fragment {
         args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
-    }
+    }*/
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater){
@@ -71,6 +62,46 @@ public class MainFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch(item.getItemId()){
+            case R.id.action_select_picture:
+                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+                photoPickerIntent.setType("image/*");
+                startActivityForResult(photoPickerIntent, PICK_PICTURE);
+                break;
+        }
+        return false;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_PICTURE){
+            if (data != null){
+                Uri selectedImage = data.getData();
+                String[] projection = {MediaStore.Images.Thumbnails._ID};
+                Cursor cursor = getActivity().getContentResolver().query(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
+                        projection, MediaStore.Images.Thumbnails.IMAGE_ID + "=?", new String[]{selectedImage.getLastPathSegment()}, null);
+
+//                cursor = MediaStore.Images.Thumbnails.queryMiniThumbnail(getActivity().getContentResolver(), imageID, MediaStore.Images.Thumbnails.DATA, null);
+//                cursor = cr.query(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, )
+                /*cursor.moveToFirst();
+                int thumbnailID = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Thumbnails._ID));
+                Uri thumbnailUri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, String.valueOf(thumbnailID));*/
+
+//                String thumbnailPath = cursor.getString(cursor.getColumnIndex(projection[0]));
+                Intent searchIntent = new Intent(getActivity(), SearchActivity.class);
+                searchIntent.putExtra(SearchActivity.INPUT_IS_SKETCH, false);
+                //                searchIntent.putExtra(SearchActivity.INPUT_THUMBNAIL_URI, thumbnailUri);
+
+                searchIntent.putExtra(SearchActivity.INPUT_IMAGE_URI, selectedImage);
+                startActivity(searchIntent);
+
+
+            }
+        }
+    }
     public MainFragment() {
         // Required empty public constructor
     }
@@ -78,10 +109,6 @@ public class MainFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
         setHasOptionsMenu(true);
     }
 

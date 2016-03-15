@@ -1,4 +1,4 @@
-package io.github.instasketch.instasketch.ServerAPI;
+package io.github.instasketch.instasketch.database;
 
 /**
  * Created by transfusion on 15-10-6.

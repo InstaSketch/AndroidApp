@@ -20,10 +20,6 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Mat;
-import org.opencv.highgui.Highgui;
-
-import java.util.HashMap;
 
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.database.ImageDatabaseContentProvider;

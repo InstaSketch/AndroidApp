@@ -2,6 +2,7 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/opencv.hpp"
+#include "Eigen/Core"
 
 #include <tuple>
 #include <vector>
@@ -38,6 +39,20 @@ std::vector<float> ColorDescriptor::flatten_vec(cv::Mat hist){
     return hist_vec;
 }
 
+float ColorDescriptor::compare_chi_squared(float hist1[], int hist1_size, float hist2[], int hist2_size, float eps){
+    Eigen::Map<Eigen::ArrayXf> hist1map(hist1, hist1_size);
+    Eigen::Map<Eigen::ArrayXf> hist2map(hist2, hist2_size);
+    Eigen::ArrayXf sub = (hist1map-hist2map).square() / (hist1map+hist2map+eps);
+    return sub.sum()*0.5;
+}
+
+float ColorDescriptor::compare_chi_squared(std::vector<float> hist1, std::vector<float> hist2, float eps){
+    Eigen::Map<Eigen::ArrayXf> hist1map(hist1.data(), hist1.size());
+    Eigen::Map<Eigen::ArrayXf> hist2map(hist2.data(), hist2.size());
+    Eigen::ArrayXf sub = (hist1map-hist2map).square() / (hist1map+hist2map+eps);
+    return sub.sum()*0.5;
+}
+
 cv::Mat ColorDescriptor::histogram(cv::Mat image, cv::Mat mask){
     cv::Mat hist;
     int channels[] = {0,1,2};
@@ -65,7 +80,6 @@ std::vector<float> ColorDescriptor::describe(cv::Mat image){
     if (image.empty()){
         return std::vector<float>();
     }
-
     cv::cvtColor(image, image, CV_BGR2HSV);
 
     int rows = image.rows;

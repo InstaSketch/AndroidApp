@@ -93,7 +93,6 @@ public class AlbumPickerActivity extends AppCompatActivity {
         public void onActivityCreated(Bundle savedInstanceState){
             super.onActivityCreated(savedInstanceState);
 
-
             setListAdapter(adapter);
         }
 
@@ -102,8 +101,8 @@ public class AlbumPickerActivity extends AppCompatActivity {
 
             View view = inflater.inflate(R.layout.listview_album_picker, container, false);
 
-            TextView tv = (TextView) view.findViewById(R.id.text);
-            tv.setText("Fragment");
+           /* TextView tv = (TextView) view.findViewById(R.id.text);
+            tv.setText("Fragment");*/
             return view;
         }
     }

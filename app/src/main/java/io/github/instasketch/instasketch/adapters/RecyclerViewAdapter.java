@@ -1,6 +1,9 @@
 package io.github.instasketch.instasketch.adapters;
 
+import android.content.ContentUris;
 import android.content.Context;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +16,7 @@ import com.squareup.picasso.Picasso;
 import java.util.List;
 
 import io.github.instasketch.instasketch.R;
-import io.github.instasketch.instasketch.ServerAPI.SearchResult;
+import io.github.instasketch.instasketch.database.SearchResult;
 
 /**
  * Created by transfusion on 15-10-6.
@@ -51,7 +54,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         SearchResult searchResult = searchResultList.get(position);
 //        System.out.println(searchResult.getThumbnailImageUrl());
 //        load image into imageview
-        Picasso.with(mContext).load(searchResult.getThumbnailImageUrl()).error(R.drawable.drawer_background).into(holder.imageView);
+//        Picasso.with(mContext).load(searchResult.getThumbnailImageUrl()).error(R.drawable.drawer_background).into(holder.imageView);
+        Uri imgUri = Uri.parse(searchResult.getImageUrl());
+
+        holder.imageView.setImageBitmap(MediaStore.Images.Thumbnails.getThumbnail(mContext.getContentResolver(), ContentUris.parseId(imgUri), MediaStore.Video.Thumbnails.MINI_KIND, null));
+//        Picasso.with(mContext).l
         holder.textView.setText(String.valueOf(searchResult.getSimilarityIndex()));
 
     }

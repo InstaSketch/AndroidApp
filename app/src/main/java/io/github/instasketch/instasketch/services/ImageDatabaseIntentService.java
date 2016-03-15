@@ -23,6 +23,7 @@ import java.util.Map;
 import io.github.instasketch.instasketch.activities.AlbumPickerActivity;
 import io.github.instasketch.instasketch.database.ImageDatabaseContentProvider;
 import io.github.instasketch.instasketch.database.ImageDatabaseHelper;
+import io.github.instasketch.instasketch.descriptors.ColorDescriptor;
 import io.github.instasketch.instasketch.descriptors.ColorDescriptorNative;
 import io.github.instasketch.instasketch.fragments.DatabaseFragment;
 
@@ -39,6 +40,7 @@ public class ImageDatabaseIntentService extends IntentService {
      */
 
     public static final int REQ_REPOPULATE_DB = 0;
+    public static final int REQ_QUERY_ENTIRE_DB = 2;
     public static final int REQ_IMAGE_BUCKETS = 1;
 
     public static final String REQUEST = "request";
@@ -46,6 +48,8 @@ public class ImageDatabaseIntentService extends IntentService {
     public static final String RECEIVER_KEY = "service_receiver";
 
     public static final String STATUS_POPULATE_PROGRESS_KEY = "status_populate_progress";
+
+    public static final String QUERY_IMAGE_URI = "query_image_uri";
 
 //    private ImageDatabaseResultReceiver receiver; CREATOR has not been redefined; for all intents and purposes it is identical to its parent class
     private ResultReceiver receiver;
@@ -75,7 +79,54 @@ public class ImageDatabaseIntentService extends IntentService {
                 getImageBuckets();
                 isRunning = true;
                 break;
+            case REQ_QUERY_ENTIRE_DB:
+                imageMatcher(intent.<Uri>getParcelableExtra(QUERY_IMAGE_URI));
+                break;
         }
+    }
+
+    private void imageMatcher(Uri inputImg){
+        String path = getRealPathFromURI(inputImg);
+        Log.i("searching for", path);
+        Mat m = Highgui.imread(path);
+        ColorDescriptorNative c = new ColorDescriptorNative();
+        float[] colorDesc = c.getDesc(m);
+        float[] arr;
+        m.release();
+        if (!(colorDesc.length == 0)){
+            String[] projection = {ImageDatabaseHelper.KEY_PATH, ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR};
+            Cursor cr = getContentResolver().query(ImageDatabaseContentProvider.CONTENT_URI, projection, null, null, null);
+            if(cr != null && cr.moveToFirst()){
+                Log.i("db working!", String.valueOf(cr.getCount()));
+                int descIndex, descPath;
+                while(!cr.isAfterLast()){
+                    descIndex = cr.getColumnIndex(ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR);
+                    descPath = cr.getColumnIndex(ImageDatabaseHelper.KEY_PATH);
+                    arr = c.deserializeFloatArr(cr.getBlob(descIndex));
+                    Log.i("comparing with", cr.getString(descPath));
+                    Log.i("distance!", String.valueOf(c.chiSquared(colorDesc, colorDesc.length, arr, arr.length)));
+
+                    cr.moveToNext();
+                }
+
+            }
+
+        }
+        isRunning = false;
+    }
+
+    private String getRealPathFromURI(Uri contentURI) {
+        String result;
+        Cursor cursor = getContentResolver().query(contentURI, null, null, null, null);
+        if (cursor == null) { // Source is Dropbox or other similar local file path
+            result = contentURI.getPath();
+        } else {
+            cursor.moveToFirst();
+            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            result = cursor.getString(idx);
+            cursor.close();
+        }
+        return result;
     }
 
 
@@ -123,6 +174,7 @@ public class ImageDatabaseIntentService extends IntentService {
 
         String TAG = "Image DB: ";
         mCursor.moveToFirst();
+        ArrayList<ContentValues> values_array = new ArrayList<ContentValues>();
         while(!mCursor.isAfterLast()) {
 //            Log.d(TAG, " - _ID : " + mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media._ID)));
             String filePath = mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media.DATA));
@@ -132,19 +184,18 @@ public class ImageDatabaseIntentService extends IntentService {
 //            Log.i("read img", m.size().toString());
             float[] colorDesc = c.getDesc(m);
             m.release();
+
             if (!(colorDesc.length == 0)){
                 ContentValues values = new ContentValues();
                 values.put(ImageDatabaseHelper.KEY_PATH, filePath);
-                try {
-                    values.put(ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR, c.serializeFloatArr(colorDesc));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                Uri todoUri = getContentResolver().insert(ImageDatabaseContentProvider.CONTENT_URI, values);
+                values.put(ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR, c.serializeFloatArr(colorDesc));
+                values_array.add(values);
+//                Uri todoUri = getContentResolver().insert(ImageDatabaseContentProvider.CONTENT_URI, values);
             }
 //            Log.i("got desc", String.valueOf(colorDesc.length));
             mCursor.moveToNext();
         }
+        getContentResolver().bulkInsert(ImageDatabaseContentProvider.CONTENT_URI, values_array.toArray(new ContentValues[values_array.size()]));
         isRunning = false;
 
     }
