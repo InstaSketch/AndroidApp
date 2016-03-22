@@ -12,11 +12,14 @@ import java.util.List;
 
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.activities.AlbumPickerActivity;
+import io.github.instasketch.instasketch.database.SharedPreferencesManager;
 
 /**
  * Created by transfusion on 16-3-6.
  */
 public class AlbumPickerAdapter extends ArrayAdapter<AlbumPickerActivity.BucketReference> {
+
+    private SharedPreferencesManager sharedPreferencesManager;
 
     public AlbumPickerAdapter(Context context, int resource){
         super(context, 0);
@@ -36,9 +39,11 @@ public class AlbumPickerAdapter extends ArrayAdapter<AlbumPickerActivity.BucketR
         TextView bucketName = (TextView) convertView.findViewById(R.id.bucket_name);
         TextView bucketPics = (TextView) convertView.findViewById(R.id.bucket_pics);
 
-        Log.i("bucketed:", ref.bucketName);
+//        Log.i("bucketed:", ref.bucketName);
         bucketName.setText(ref.bucketName);
         bucketPics.setText(String.valueOf(ref.images));
         return convertView;
     }
+
+
 }

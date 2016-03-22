@@ -3,28 +3,30 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">-->
 
-<RelativeLayout
+<io.github.instasketch.instasketch.layouts.CheckableLinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="10dp"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/bucket_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Name"
-            android:textSize="20dp"
-            android:textColor="#000" />
+    <CheckedTextView
+        android:id="@+id/bucket_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Name"
+        android:checkMark="?android:attr/listChoiceIndicatorMultiple"
+        android:textSize="20dp"
+        android:textColor="#000" />
 
-        <TextView
+    <TextView
             android:id="@+id/bucket_pics"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/bucket_name"
             android:text="HomeTown" />
 
-    </RelativeLayout>
+</io.github.instasketch.instasketch.layouts.CheckableLinearLayout>
 
 <!--
 </LinearLayout>-->

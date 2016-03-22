@@ -11,8 +11,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
-
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import io.github.instasketch.instasketch.R;
@@ -23,6 +23,8 @@ import io.github.instasketch.instasketch.database.SearchResult;
  */
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.CustomViewHolder> {
 
+    public static int SORT_BY_COLOR = 1;
+//    public static int SORT_BY_
     private List<SearchResult> searchResultList;
     private Context mContext;
 
@@ -55,7 +57,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 //        System.out.println(searchResult.getThumbnailImageUrl());
 //        load image into imageview
 //        Picasso.with(mContext).load(searchResult.getThumbnailImageUrl()).error(R.drawable.drawer_background).into(holder.imageView);
-        Uri imgUri = Uri.parse(searchResult.getImageUrl());
+//        Uri imgUri = Uri.parse(searchResult.getImageUrl());
+
+        Uri imgUri = Uri.withAppendedPath( MediaStore.Images.Media.EXTERNAL_CONTENT_URI, Integer.toString(searchResult.getImageID()) );
 
         holder.imageView.setImageBitmap(MediaStore.Images.Thumbnails.getThumbnail(mContext.getContentResolver(), ContentUris.parseId(imgUri), MediaStore.Video.Thumbnails.MINI_KIND, null));
 //        Picasso.with(mContext).l
@@ -67,5 +71,19 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public int getItemCount() {
         return (searchResultList == null ? 0 : searchResultList.size());
     }
+
+    public void swap(List<SearchResult> searchResults, int sortMethod){
+        searchResultList.clear();
+        Collections.sort(searchResults, new Comparator<SearchResult>(){
+            @Override
+            public int compare(SearchResult lhs, SearchResult rhs) {
+                return Float.compare(lhs.getSimilarityIndex(),rhs.getSimilarityIndex());
+            }
+
+        });
+        searchResultList.addAll(searchResults);
+        notifyDataSetChanged();
+    }
+
 
 }

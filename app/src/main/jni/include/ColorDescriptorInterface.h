@@ -16,7 +16,7 @@ extern "C" {
 JNIEXPORT jfloatArray JNICALL
         Java_io_github_instasketch_instasketch_descriptors_ColorDescriptorNative_getColorDesc(JNIEnv *env,
                                                                                  jobject instance,
-                                                                                 jlong matAddr);
+                                                                                 jlong matAddr, jint h_bins, jint s_bins, jint v_bins);
 
 JNIEXPORT jfloat JNICALL
 Java_io_github_instasketch_instasketch_descriptors_ColorDescriptorNative_chiSquared(JNIEnv *env, jobject instance,

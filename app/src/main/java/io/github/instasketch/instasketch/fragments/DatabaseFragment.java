@@ -21,9 +21,13 @@ import android.widget.TextView;
 
 import org.opencv.android.OpenCVLoader;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.database.ImageDatabaseContentProvider;
 import io.github.instasketch.instasketch.database.ImageDatabaseHelper;
+import io.github.instasketch.instasketch.database.SharedPreferencesManager;
 import io.github.instasketch.instasketch.receivers.ImageDatabaseResultReceiver;
 import io.github.instasketch.instasketch.services.ImageDatabaseIntentService;
 
@@ -35,19 +39,30 @@ import io.github.instasketch.instasketch.services.ImageDatabaseIntentService;
  * Use the {@link DatabaseFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class DatabaseFragment extends android.support.v4.app.Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 //    private ContentResolver mResolver;
     private Cursor mCursor;
     private OnFragmentInteractionListener mListener;
+    private SharedPreferencesManager sharedPreferencesManager;
 
     private TextView rowCountView;
+    private TextView lastPopulatedView;
+    private TextView populateProgressView;
+    private TextView populateProgressFilePath;
+
     private Button repopulateBtn;
+    private Button updateBtn;
 
     public ImageDatabaseResultReceiver dbStatusReceiver;
 
     public static final int POPULATE_STARTED = 0;
     public static final int POPULATE_PROGRESS = 1;
+    public static final int POPULATE_ABORTED = 3;
     public static final int POPULATE_COMPLETED = 2;
+
+    public static final String POPULATE_BATCH_COUNT = "populate_batch_count";
+
+    private int populateBatchCount = -1;
 
 //    public static final int RECEIVER = -1;
 
@@ -77,7 +92,7 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        rowCountView = (TextView) getActivity().findViewById(R.id.db_rows);
+//        rowCountView = (TextView) getActivity().findViewById(R.id.db_rows);
         rowCountView.setText(String.valueOf(data.getCount()));
     }
 
@@ -102,8 +117,10 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        String[] projection = {MediaStore.Images.Media.DATA};
-        Log.i("Test JNI Interface", getMessage());
+        /*String[] projection = {MediaStore.Images.Media.DATA};
+        Log.i("Test JNI Interface", getMessage());*/
+
+        sharedPreferencesManager = new SharedPreferencesManager(this.getActivity());
 
         if (!OpenCVLoader.initDebug()) {
             // Handle initialization error
@@ -132,11 +149,26 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
         View view = inflater.inflate(R.layout.fragment_database, container, false);
 //        ImageDatabaseHelper imgDB = new ImageDatabaseHelper(this.getActivity());
         rowCountView = (TextView) view.findViewById(R.id.db_rows);
+        lastPopulatedView = (TextView) view.findViewById(R.id.lastIndexedDate);
+        populateProgressView = (TextView) view.findViewById(R.id.populateProgress);
+        populateProgressFilePath = (TextView) view.findViewById(R.id.currentImage);
+
+        Long date = sharedPreferencesManager.getLastPopulatedDate();
+        if (date != -1l){
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(date);
+            SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            lastPopulatedView.setText(s.format(c.getTime()));
+        }
+        else {
+            lastPopulatedView.setText("Never");
+        }
 //        v.setText(String.valueOf(imgDB.getImagesCount()));
 
         getLoaderManager().initLoader(IMAGE_LOADER, null, this);
 
         repopulateBtn = (Button) view.findViewById(R.id.btn_repopulate);
+        updateBtn = (Button) view.findViewById(R.id.btn_update);
 
         if (ImageDatabaseIntentService.isRunning){
             repopulateBtn.setAlpha(.5f);
@@ -170,23 +202,32 @@ public class DatabaseFragment extends Fragment implements LoaderManager.LoaderCa
         this.dbStatusReceiver.setReceiver(new ImageDatabaseResultReceiver.Receiver(){
             @Override
             public void onReceiveResult(int resultCode, Bundle resultData){
-            if (resultCode == POPULATE_STARTED){
-                repopulateBtn.setAlpha(.5f);
-                repopulateBtn.setEnabled(false);
-            }
-            if (resultCode == POPULATE_PROGRESS ){
-                int imgs = resultData.getInt(ImageDatabaseIntentService.STATUS_POPULATE_PROGRESS_KEY);
-                Log.i("Pop in progress: ", String.valueOf(imgs));
-            }
-            else if (resultCode == POPULATE_COMPLETED){
-                int imgCount = resultData.getInt("images");
-                repopulateBtn.setEnabled(true);
-                Log.i("Finished populating, ", String.valueOf(imgCount));
-            }
+                if (resultCode == POPULATE_STARTED){
+                    int thisBatch = resultData.getInt(POPULATE_BATCH_COUNT);
+                    populateBatchCount = thisBatch;
+                    repopulateBtn.setAlpha(.5f);
+                    repopulateBtn.setEnabled(false);
+                }
+                else if (resultCode == POPULATE_PROGRESS ){
+                    int imgs = resultData.getInt(ImageDatabaseIntentService.STATUS_POPULATE_PROGRESS_KEY);
+                    populateProgressView.setText(imgs+"/"+populateBatchCount);
+                    String s = resultData.getString(ImageDatabaseIntentService.STATUS_POPULATE_PROGRESS_PATH_KEY);
+                    populateProgressFilePath.setText(s);
+
+
+                }
+                else if (resultCode == POPULATE_ABORTED){
+                    Log.i("Pop aborted", "aborted");
+                }
+                else if (resultCode == POPULATE_COMPLETED){
+                    int imgCount = resultData.getInt("images");
+                    repopulateBtn.setAlpha(1f);
+                    repopulateBtn.setEnabled(true);
+                    Log.i("Finished populating, ", String.valueOf(imgCount));
+                }
             }
         });
     }
-
 
 
     // TODO: Rename method, update argument and hook method into UI event

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -21,14 +22,16 @@ import java.util.List;
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.adapters.RecyclerViewAdapter;
 import io.github.instasketch.instasketch.database.SearchResult;
+import io.github.instasketch.instasketch.receivers.ImageDatabaseResultReceiver;
 import io.github.instasketch.instasketch.services.ImageDatabaseIntentService;
 
 
-public class SearchResultFragment extends Fragment {
+public class SearchResultFragment extends android.support.v4.app.Fragment {
 
     private OnFragmentInteractionListener mListener;
 
     public static final String ARG_PAGE = "ARG_PAGE";
+    public static final String RESULTS_LIST = "RESULTS_LIST";
     public static final int LOCAL_RESULTS = 1;
     public static final int SERVER_RESULTS = 2;
     private int mPage;
@@ -37,6 +40,11 @@ public class SearchResultFragment extends Fragment {
     private RecyclerViewAdapter mRecyclerViewAdapter;
     private List<SearchResult> searchResultList;
     private resultFragmentInit activityData;
+    public ImageDatabaseResultReceiver dbStatusReceiver;
+
+    public static final int QUERY_STARTED = 0;
+//    public static final int QUERY_PROGRESS = 1;
+    public static final int QUERY_COMPLETED = 2;
 
     public SearchResultFragment() {
         // Required empty public constructor
@@ -60,6 +68,12 @@ public class SearchResultFragment extends Fragment {
 
         }
         mPage = getArguments().getInt(ARG_PAGE);
+        /*if (savedInstanceState != null){
+            this.dbStatusReceiver = savedInstanceState.getParcelable(ImageDatabaseIntentService.RECEIVER_KEY);
+        }
+        else {*/
+            setupServiceReceiver();
+//        }
     }
 
     public interface resultFragmentInit {
@@ -77,7 +91,7 @@ public class SearchResultFragment extends Fragment {
         mRecyclerView = (RecyclerView) view.findViewById(R.id.searchResults);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this.getActivity()));
         if(mPage == LOCAL_RESULTS){
-            sampleText.setText("Local Results");
+//            sampleText.setText("Local Results");
             populateLocalSearchResults();
         }
         else if (mPage == SERVER_RESULTS){
@@ -87,22 +101,39 @@ public class SearchResultFragment extends Fragment {
     }
 
 
+    private void setupServiceReceiver(){
+        this.dbStatusReceiver = new ImageDatabaseResultReceiver(new Handler());
+
+        this.dbStatusReceiver.setReceiver(new ImageDatabaseResultReceiver.Receiver(){
+            @Override
+            public void onReceiveResult(int resultCode, Bundle resultData){
+                if (resultCode == QUERY_STARTED){
+//                    Log.i)
+                }
+                else if (resultCode == QUERY_COMPLETED){
+                    mRecyclerViewAdapter.swap((List<SearchResult>) resultData.get(RESULTS_LIST), RecyclerViewAdapter.SORT_BY_COLOR);
+                }
+            }
+        });
+    }
+
     protected void populateLocalSearchResults(){
 
         Intent testIntent = new Intent(getActivity(), ImageDatabaseIntentService.class);
         testIntent.putExtra(ImageDatabaseIntentService.REQUEST, ImageDatabaseIntentService.REQ_QUERY_ENTIRE_DB);
         testIntent.putExtra(ImageDatabaseIntentService.QUERY_IMAGE_URI, activityData.getQueryImageURI());
+        testIntent.putExtra(ImageDatabaseIntentService.RECEIVER_KEY, dbStatusReceiver);
         getActivity().startService(testIntent);
 
-        Log.i("populating results", "populated");
-        searchResultList = new ArrayList<>();
+        /*searchResultList = new ArrayList<>();
         SearchResult result = new SearchResult();
         if (!activityData.isSketch()){
             result.setSimilarityIndex(100);
             result.setImageUrl(activityData.getQueryImageURI().toString());
         }
         searchResultList.add(result);
-//            result.setThumbnailImageUrl();
+            result.setThumbnailImageUrl();*/
+        searchResultList = new ArrayList<>();
         mRecyclerViewAdapter = new RecyclerViewAdapter(this.getActivity(), searchResultList);
         mRecyclerView.setAdapter(mRecyclerViewAdapter);
     }

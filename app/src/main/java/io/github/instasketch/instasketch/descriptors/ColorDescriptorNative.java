@@ -13,16 +13,24 @@ import java.nio.*;
  * Created by transfusion on 16-2-29.
  */
 public class ColorDescriptorNative {
+    private int h_bins, s_bins, v_bins;
+
     static {
         System.loadLibrary("myjni");
     }
 
-    private native float[] getColorDesc(long matAddr);
+    private native float[] getColorDesc(long matAddr, int h_bins, int s_bins, int v_bins);
 
     public native float chiSquared(float[] hist1, int hist1_size, float[] hist2, int hist2_size);
 
+    public ColorDescriptorNative(int h_bins, int s_bins, int v_bins){
+        this.h_bins = h_bins;
+        this.s_bins = s_bins;
+        this.v_bins = v_bins;
+    }
+
     public float[] getDesc(Mat m){
-        return getColorDesc(m.getNativeObjAddr());
+        return getColorDesc(m.getNativeObjAddr(), this.h_bins, this.s_bins, this.v_bins);
     }
 
     /*public byte[] serializeFloatArr(float[] desc) throws IOException {

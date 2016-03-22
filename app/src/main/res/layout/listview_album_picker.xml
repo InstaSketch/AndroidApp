@@ -11,6 +11,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="10dp"
+    android:background="?android:attr/activatedBackgroundIndicator"
     android:orientation="vertical"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -18,6 +19,7 @@
             android:id="@android:id/list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:choiceMode="multipleChoice"
             android:dividerHeight="1px"
             xmlns:android="http://schemas.android.com/apk/res/android">
 

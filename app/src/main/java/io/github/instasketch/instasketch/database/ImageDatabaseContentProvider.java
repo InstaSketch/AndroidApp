@@ -42,7 +42,7 @@ public class ImageDatabaseContentProvider extends ContentProvider {
     }
 
     private void checkColumns(String[] projection){
-        String[] available = {ImageDatabaseHelper.KEY_ID, ImageDatabaseHelper.KEY_PATH, ImageDatabaseHelper.KEY_LOCAL_STRUCTURAL_DESCRIPTOR,
+        String[] available = {ImageDatabaseHelper.KEY_ID, ImageDatabaseHelper.KEY_IMAGE_ID, ImageDatabaseHelper.KEY_PATH, ImageDatabaseHelper.KEY_LOCAL_STRUCTURAL_DESCRIPTOR,
         ImageDatabaseHelper.KEY_GLOBAL_STRUCTURAL_DESCRIPTOR, ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR};
         if (projection != null){
             Set<String> requestedColumns = new HashSet<String>(Arrays.asList(projection));

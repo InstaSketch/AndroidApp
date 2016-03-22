@@ -5,11 +5,11 @@
 JNIEXPORT jfloatArray JNICALL
     Java_io_github_instasketch_instasketch_descriptors_ColorDescriptorNative_getColorDesc(JNIEnv *env,
                                                                                        jobject instance,
-                                                                                       jlong matAddr){
+                                                                                       jlong matAddr, jint h_bins, jint s_bins, jint v_bins){
     cv::Mat& m = *(cv::Mat*) matAddr;
-    ColorDescriptor desc(8,12,5);
+//    ColorDescriptor desc(8,12,5);
 
-    std::vector<float> vec = desc.describe(m);
+    std::vector<float> vec = ColorDescriptor::describe(m, h_bins, s_bins, v_bins);
     jfloatArray result;
     result = env->NewFloatArray(vec.size());
     env->SetFloatArrayRegion(result, 0, vec.size(), &vec[0]);

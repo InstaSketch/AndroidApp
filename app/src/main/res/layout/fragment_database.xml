@@ -11,7 +11,7 @@
         android:layout_height="match_parent"
         android:text="@string/hello_blank_fragment" />-->
     <RelativeLayout
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_centerInParent="true"
         android:gravity="center">
@@ -27,20 +27,65 @@
             android:id="@+id/db_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/db_rows"
             android:textSize = "20sp"
-            android:text = "images indexed."/>
+            android:text = "images indexed."
+            android:layout_below="@+id/db_rows"
+            android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text = "Last indexed: "
+            android:id="@+id/textView"
+
+            android:layout_below="@+id/db_text"
+            android:layout_alignLeft="@+id/btn_update"
+            android:layout_alignStart="@+id/btn_update" />
+
+        <TextView
+            android:id="@+id/lastIndexedDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text = "Never"
+            android:layout_below="@+id/textView"
+            android:layout_centerHorizontal="true" />
 
         <Button
             android:id="@+id/btn_repopulate"
             android:theme="@style/ColoredButton"
             android:layout_width="wrap_content"
-            android:layout_centerHorizontal="true"
             android:layout_height="wrap_content"
-            android:layout_below="@id/db_text"
             android:text="Repopulate"
-            android:layout_marginTop="10dp"
-            android:textColor="#FFFFFF"/>
+            android:textColor="#FFFFFF"
+            android:layout_below="@+id/lastIndexedDate"
+            android:layout_centerHorizontal="true" />
+
+        <Button
+            android:id="@+id/btn_update"
+            android:theme="@style/ColoredButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Update"
+            android:textColor="#FFFFFF"
+            android:layout_below="@+id/btn_repopulate"
+            android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/populateProgress"
+            android:layout_below="@+id/btn_update"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="71dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/currentImage"
+            android:layout_below="@+id/populateProgress"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp" />
+
 
     </RelativeLayout>
 

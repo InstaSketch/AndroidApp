@@ -24,6 +24,8 @@ public class ImageDatabaseHelper extends SQLiteOpenHelper {
 
     public static final String KEY_ID = "_id";
 
+    public static final String KEY_IMAGE_ID = "image_id";
+
     public static final String KEY_PATH = "path";
 
     public static final String KEY_LOCAL_STRUCTURAL_TYPE = "structLocalType";
@@ -44,6 +46,7 @@ public class ImageDatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String CREATE_IMAGES_TABLE = "CREATE TABLE "+TABLE_IMAGES+"("+
                 KEY_ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
+                KEY_IMAGE_ID+" INTEGER NOT NULL, "+
                 KEY_PATH+" TEXT NOT NULL, "+
                 KEY_LOCAL_STRUCTURAL_DESCRIPTOR+" blob, " +
         KEY_GLOBAL_STRUCTURAL_DESCRIPTOR + " blob, " +

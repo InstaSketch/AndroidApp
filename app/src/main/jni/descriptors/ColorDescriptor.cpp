@@ -2,7 +2,7 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/opencv.hpp"
-#include "Eigen/Core"
+#include "/home/transfusion/eigen-eigen-07105f7124f9/Eigen/Core"
 
 #include <tuple>
 #include <vector>
@@ -11,13 +11,13 @@ typedef std::tuple<int, int,int,int> i4tuple;
 
 const int SUB_HISTOGRAMS = 5;
 
-ColorDescriptor::ColorDescriptor(int h_bins, int s_bins, int v_bins){
+/*ColorDescriptor::ColorDescriptor(int h_bins, int s_bins, int v_bins){
     this->h_bins = h_bins;
     this->s_bins = s_bins;
     this->v_bins = v_bins;
-}
+}*/
 
-std::vector<float> ColorDescriptor::flatten_vec(cv::Mat hist){
+std::vector<float> ColorDescriptor::flatten_vec(cv::Mat hist, int h_bins, int s_bins, int v_bins){
 
 //http://stackoverflow.com/questions/26681713/convert-mat-to-array-vector-in-opencv
     std::vector<float> hist_vec;
@@ -27,9 +27,9 @@ std::vector<float> ColorDescriptor::flatten_vec(cv::Mat hist){
     else {
 //    WARNING: No idea how to test with noncontiguous arrays.
 //        std::cout << "NONCONTIGUOUS" << std::endl;
-        for (int i = 0; i < this->h_bins; i++){
-            for (int j = 0; j < this->s_bins; j++){
-                hist_vec.insert(hist_vec.end(), (float*)hist.ptr<float>(j), (float*)hist.ptr<float>(j)+this->v_bins);
+        for (int i = 0; i < h_bins; i++){
+            for (int j = 0; j < s_bins; j++){
+                hist_vec.insert(hist_vec.end(), (float*)hist.ptr<float>(j), (float*)hist.ptr<float>(j)+v_bins);
             }
         }
     }
@@ -53,7 +53,7 @@ float ColorDescriptor::compare_chi_squared(std::vector<float> hist1, std::vector
     return sub.sum()*0.5;
 }
 
-cv::Mat ColorDescriptor::histogram(cv::Mat image, cv::Mat mask){
+cv::Mat ColorDescriptor::histogram(cv::Mat image, cv::Mat mask, int h_bins, int s_bins, int v_bins){
     cv::Mat hist;
     int channels[] = {0,1,2};
 
@@ -61,7 +61,7 @@ cv::Mat ColorDescriptor::histogram(cv::Mat image, cv::Mat mask){
     float sranges[] = { 0, 256 };
     float vranges[] = { 0, 256 };
 
-    int histSize[] = {this->h_bins, this->s_bins, this->v_bins};
+    int histSize[] = {h_bins, s_bins, v_bins};
     const float* ranges[] = { hranges, sranges, vranges };
 
     cv::calcHist(&image, 1, channels, mask, hist, 3, histSize, ranges);
@@ -76,11 +76,12 @@ cv::Mat ColorDescriptor::histogram(cv::Mat image, cv::Mat mask){
     return hist;
 }
 
-std::vector<float> ColorDescriptor::describe(cv::Mat image){
+std::vector<float> ColorDescriptor::describe(cv::Mat image, int h_bins, int s_bins, int v_bins){
     if (image.empty()){
         return std::vector<float>();
     }
     cv::cvtColor(image, image, CV_BGR2HSV);
+//    cv::resize(image, image, cv::Size(300, 300), 0, 0, CV_INTER_LINEAR);
 
     int rows = image.rows;
     int cols = image.cols;
@@ -107,12 +108,12 @@ std::vector<float> ColorDescriptor::describe(cv::Mat image){
         cv::rectangle(cornerMask, cv::Point(std::get<0>(*it), std::get<2>(*it)), cv::Point(std::get<1>(*it), std::get<3>(*it)), cv::Scalar(255, 255, 255), -1);
         cv::subtract(cornerMask, ellipMask, cornerMask);
 //        std::cout << "cornermask_dims " << cornerMask.dims << std::endl;
-        localHist = flatten_vec(histogram(image, cornerMask));
+        localHist = flatten_vec(histogram(image, cornerMask, h_bins, s_bins, v_bins), h_bins, s_bins, v_bins);
         finalHist.insert(finalHist.end(), localHist.begin(), localHist.end() );
 
     }
 
-    localHist = flatten_vec(histogram(image, ellipMask));
+    localHist = flatten_vec(histogram(image, ellipMask, h_bins, s_bins, v_bins), h_bins, s_bins, v_bins);
 
     finalHist.insert(finalHist.end(), localHist.begin(), localHist.end() );
 //    return image;

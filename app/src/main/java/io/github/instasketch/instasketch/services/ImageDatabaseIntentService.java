@@ -17,15 +17,21 @@ import org.opencv.highgui.Highgui;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.github.instasketch.instasketch.activities.AlbumPickerActivity;
 import io.github.instasketch.instasketch.database.ImageDatabaseContentProvider;
 import io.github.instasketch.instasketch.database.ImageDatabaseHelper;
+import io.github.instasketch.instasketch.database.SearchResult;
+import io.github.instasketch.instasketch.database.SharedPreferencesManager;
 import io.github.instasketch.instasketch.descriptors.ColorDescriptor;
 import io.github.instasketch.instasketch.descriptors.ColorDescriptorNative;
 import io.github.instasketch.instasketch.fragments.DatabaseFragment;
+import io.github.instasketch.instasketch.fragments.SearchResultFragment;
 
 
 /**
@@ -40,6 +46,7 @@ public class ImageDatabaseIntentService extends IntentService {
      */
 
     public static final int REQ_REPOPULATE_DB = 0;
+    public static final int REQ_ABORT_POPULATE = 3;
     public static final int REQ_QUERY_ENTIRE_DB = 2;
     public static final int REQ_IMAGE_BUCKETS = 1;
 
@@ -48,8 +55,13 @@ public class ImageDatabaseIntentService extends IntentService {
     public static final String RECEIVER_KEY = "service_receiver";
 
     public static final String STATUS_POPULATE_PROGRESS_KEY = "status_populate_progress";
+    public static final String STATUS_POPULATE_PROGRESS_PATH_KEY = "status_populate_path_key";
+    public static final String STATUS_POPULATE_BATCH_COUNT_KEY = "status_populate_batch_count_key";
+    public static final String STATUS_POPULATE_COMPLETED_KEY = "status_populate_completed";
 
     public static final String QUERY_IMAGE_URI = "query_image_uri";
+
+    private SharedPreferencesManager sharedPreferencesManager;
 
 //    private ImageDatabaseResultReceiver receiver; CREATOR has not been redefined; for all intents and purposes it is identical to its parent class
     private ResultReceiver receiver;
@@ -63,23 +75,28 @@ public class ImageDatabaseIntentService extends IntentService {
     }
 
     public static volatile boolean isRunning = false;
+
     @Override
     protected void onHandleIntent(Intent intent) {
         int n = intent.getIntExtra(REQUEST, REQ_REPOPULATE_DB);
         this.receiver = intent.getParcelableExtra(RECEIVER_KEY);
+        this.sharedPreferencesManager = new SharedPreferencesManager(this);
 
         switch(n){
             case REQ_REPOPULATE_DB:
 //                Bundle notifyUI = new Bundle();
-                receiver.send(DatabaseFragment.POPULATE_STARTED, Bundle.EMPTY);
                 isRunning = true;
                 repopulateEntireDB();
                 break;
+            case REQ_ABORT_POPULATE:
+                break;
             case REQ_IMAGE_BUCKETS:
-                getImageBuckets();
                 isRunning = true;
+                getImageBuckets();
                 break;
             case REQ_QUERY_ENTIRE_DB:
+                receiver.send(SearchResultFragment.QUERY_STARTED, Bundle.EMPTY);
+                isRunning = true;
                 imageMatcher(intent.<Uri>getParcelableExtra(QUERY_IMAGE_URI));
                 break;
         }
@@ -89,27 +106,40 @@ public class ImageDatabaseIntentService extends IntentService {
         String path = getRealPathFromURI(inputImg);
         Log.i("searching for", path);
         Mat m = Highgui.imread(path);
-        ColorDescriptorNative c = new ColorDescriptorNative();
+        ColorDescriptorNative c = new ColorDescriptorNative(8,12,5);
         float[] colorDesc = c.getDesc(m);
         float[] arr;
         m.release();
         if (!(colorDesc.length == 0)){
-            String[] projection = {ImageDatabaseHelper.KEY_PATH, ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR};
+            String[] projection = {ImageDatabaseHelper.KEY_IMAGE_ID, ImageDatabaseHelper.KEY_PATH, ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR};
             Cursor cr = getContentResolver().query(ImageDatabaseContentProvider.CONTENT_URI, projection, null, null, null);
+            ArrayList<SearchResult> searchResultList = new ArrayList<>();
             if(cr != null && cr.moveToFirst()){
-                Log.i("db working!", String.valueOf(cr.getCount()));
-                int descIndex, descPath;
+//                Log.i("db working!", String.valueOf(cr.getCount()));
+                int descIndex, descPath, imageID;
                 while(!cr.isAfterLast()){
                     descIndex = cr.getColumnIndex(ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR);
                     descPath = cr.getColumnIndex(ImageDatabaseHelper.KEY_PATH);
+                    imageID = cr.getColumnIndex(ImageDatabaseHelper.KEY_IMAGE_ID);
+
                     arr = c.deserializeFloatArr(cr.getBlob(descIndex));
-                    Log.i("comparing with", cr.getString(descPath));
-                    Log.i("distance!", String.valueOf(c.chiSquared(colorDesc, colorDesc.length, arr, arr.length)));
+                    SearchResult s = new SearchResult();
+                    s.setImageUrl(cr.getString(descPath));
+                    s.setSimilarityIndex(c.chiSquared(colorDesc, colorDesc.length, arr, arr.length));
+                    s.setImageID(cr.getInt(imageID));
+
+                    searchResultList.add(s);
+//                    Log.i("comparing with", cr.getString(descPath));
+//                    Log.i("distance!", String.valueOf(c.chiSquared(colorDesc, colorDesc.length, arr, arr.length)));
 
                     cr.moveToNext();
                 }
-
+                cr.close();
+                Bundle b = new Bundle();
+                b.putParcelableArrayList(SearchResultFragment.RESULTS_LIST, searchResultList);
+                receiver.send(SearchResultFragment.QUERY_COMPLETED, b);
             }
+
 
         }
         isRunning = false;
@@ -163,40 +193,57 @@ public class ImageDatabaseIntentService extends IntentService {
     }
 //    Methods below all interface with MediaStore and ImageDatabaseContentProvider.
 
-    private void repopulateEntireDB() {
+    private void repopulateEntireDB(){
         getContentResolver().delete(ImageDatabaseContentProvider.CONTENT_URI, "1", null);
 
-        ColorDescriptorNative c = new ColorDescriptorNative();
 
-        Cursor mCursor = this.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, MediaStore.Images.Media.DEFAULT_SORT_ORDER);
+        Set<String> albums = sharedPreferencesManager.getPopulatedAlbums();
+        ColorDescriptorNative c = new ColorDescriptorNative(8,12,5);
+        StringBuilder inList = new StringBuilder(albums.size()*2);
+        for (int i = 0; i < albums.size(); i++){
+            if (i > 0){
+                inList.append(",");
+            }
+            inList.append("?");
+        }
 
-        Log.i("cursor.getCount()) :", mCursor.getCount() + "");
+        String[] albumsList = albums.toArray(new String[albums.size()]);
+
+        Cursor mCursor = this.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, "BUCKET_DISPLAY_NAME IN (" + inList.toString() + ")", albumsList, null);
+
+        int batchCount = mCursor.getCount();
+        Bundle b = new Bundle();
+        b.putInt(DatabaseFragment.POPULATE_BATCH_COUNT, batchCount);
+
+        receiver.send(DatabaseFragment.POPULATE_STARTED, b);
 
         String TAG = "Image DB: ";
         mCursor.moveToFirst();
+        int currentImg = 1;
         ArrayList<ContentValues> values_array = new ArrayList<ContentValues>();
+//        b.clear();
         while(!mCursor.isAfterLast()) {
-//            Log.d(TAG, " - _ID : " + mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media._ID)));
             String filePath = mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media.DATA));
             Log.d(TAG, " - File Name : " + filePath);
-//            Log.d(TAG, " - File Path : " + mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media.DATA)));
             Mat m = Highgui.imread(filePath);
-//            Log.i("read img", m.size().toString());
             float[] colorDesc = c.getDesc(m);
             m.release();
-
             if (!(colorDesc.length == 0)){
                 ContentValues values = new ContentValues();
+                values.put(ImageDatabaseHelper.KEY_IMAGE_ID, mCursor.getInt(mCursor.getColumnIndex(MediaStore.Images.Media._ID)));
                 values.put(ImageDatabaseHelper.KEY_PATH, filePath);
                 values.put(ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR, c.serializeFloatArr(colorDesc));
                 values_array.add(values);
-//                Uri todoUri = getContentResolver().insert(ImageDatabaseContentProvider.CONTENT_URI, values);
             }
-//            Log.i("got desc", String.valueOf(colorDesc.length));
+            b.putInt(STATUS_POPULATE_PROGRESS_KEY, currentImg++);
+            b.putString(STATUS_POPULATE_PROGRESS_PATH_KEY, filePath);
+            receiver.send(DatabaseFragment.POPULATE_PROGRESS, b);
             mCursor.moveToNext();
         }
+        mCursor.close();
         getContentResolver().bulkInsert(ImageDatabaseContentProvider.CONTENT_URI, values_array.toArray(new ContentValues[values_array.size()]));
+        sharedPreferencesManager.setLastPopulatedDate(System.currentTimeMillis());
+        receiver.send(DatabaseFragment.POPULATE_COMPLETED, Bundle.EMPTY);
         isRunning = false;
-
     }
 }
