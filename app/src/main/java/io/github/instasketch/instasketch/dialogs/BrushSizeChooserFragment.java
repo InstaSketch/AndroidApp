@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.SeekBar;
@@ -36,6 +37,7 @@ public class BrushSizeChooserFragment extends DialogFragment {
 
     public static BrushSizeChooserFragment newInstance(int size){
         BrushSizeChooserFragment fragment = new BrushSizeChooserFragment();
+        Log.i("initing fragment", fragment.toString());
         Bundle args = new Bundle();
         if (size > 0){
             args.putInt("current_brush_size", size);

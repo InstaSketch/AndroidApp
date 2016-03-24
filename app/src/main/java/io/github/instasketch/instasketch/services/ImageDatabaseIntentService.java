@@ -1,11 +1,15 @@
 package io.github.instasketch.instasketch.services;
 
 import android.app.IntentService;
+import android.content.ContentProviderOperation;
 import android.content.ContentValues;
 import android.content.Intent;
 
+import android.content.OperationApplicationException;
+import android.database.CursorJoiner;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.database.Cursor;
@@ -19,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +54,7 @@ public class ImageDatabaseIntentService extends IntentService {
     public static final int REQ_ABORT_POPULATE = 3;
     public static final int REQ_QUERY_ENTIRE_DB = 2;
     public static final int REQ_IMAGE_BUCKETS = 1;
+    public static final int REQ_UPDATE_DB = 4;
 
     public static final String REQUEST = "request";
 
@@ -76,17 +82,24 @@ public class ImageDatabaseIntentService extends IntentService {
 
     public static volatile boolean isRunning = false;
 
+    private ColorDescriptorNative colorDesc;
+
     @Override
     protected void onHandleIntent(Intent intent) {
         int n = intent.getIntExtra(REQUEST, REQ_REPOPULATE_DB);
         this.receiver = intent.getParcelableExtra(RECEIVER_KEY);
         this.sharedPreferencesManager = new SharedPreferencesManager(this);
+        this.colorDesc = new ColorDescriptorNative(8,12,5);
 
         switch(n){
             case REQ_REPOPULATE_DB:
 //                Bundle notifyUI = new Bundle();
                 isRunning = true;
                 repopulateEntireDB();
+                break;
+            case REQ_UPDATE_DB:
+                isRunning = true;
+                updateDB();
                 break;
             case REQ_ABORT_POPULATE:
                 break;
@@ -198,7 +211,7 @@ public class ImageDatabaseIntentService extends IntentService {
 
 
         Set<String> albums = sharedPreferencesManager.getPopulatedAlbums();
-        ColorDescriptorNative c = new ColorDescriptorNative(8,12,5);
+
         StringBuilder inList = new StringBuilder(albums.size()*2);
         for (int i = 0; i < albums.size(); i++){
             if (i > 0){
@@ -226,13 +239,13 @@ public class ImageDatabaseIntentService extends IntentService {
             String filePath = mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media.DATA));
             Log.d(TAG, " - File Name : " + filePath);
             Mat m = Highgui.imread(filePath);
-            float[] colorDesc = c.getDesc(m);
+            float[] colorDesc = this.colorDesc.getDesc(m);
             m.release();
             if (!(colorDesc.length == 0)){
                 ContentValues values = new ContentValues();
                 values.put(ImageDatabaseHelper.KEY_IMAGE_ID, mCursor.getInt(mCursor.getColumnIndex(MediaStore.Images.Media._ID)));
                 values.put(ImageDatabaseHelper.KEY_PATH, filePath);
-                values.put(ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR, c.serializeFloatArr(colorDesc));
+                values.put(ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR, this.colorDesc.serializeFloatArr(colorDesc));
                 values_array.add(values);
             }
             b.putInt(STATUS_POPULATE_PROGRESS_KEY, currentImg++);
@@ -245,5 +258,80 @@ public class ImageDatabaseIntentService extends IntentService {
         sharedPreferencesManager.setLastPopulatedDate(System.currentTimeMillis());
         receiver.send(DatabaseFragment.POPULATE_COMPLETED, Bundle.EMPTY);
         isRunning = false;
+    }
+
+    private void updateDB(){
+        Set<String> albums = sharedPreferencesManager.getPopulatedAlbums();
+        ColorDescriptorNative c = new ColorDescriptorNative(8,12,5);
+
+        StringBuilder inList = new StringBuilder(albums.size()*2);
+        for (int i = 0; i < albums.size(); i++){
+            if (i > 0){
+                inList.append(",");
+            }
+            inList.append("?");
+        }
+
+        String[] albumsList = albums.toArray(new String[albums.size()]);
+
+        Cursor mCursor = this.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, "BUCKET_DISPLAY_NAME IN (" + inList.toString() + ")", albumsList, MediaStore.Images.Media._ID+" ASC");
+
+        String[] projection = {ImageDatabaseHelper.KEY_IMAGE_ID};
+        Cursor cr = getContentResolver().query(ImageDatabaseContentProvider.CONTENT_URI, projection, null, null, ImageDatabaseHelper.KEY_IMAGE_ID+" ASC");
+
+        CursorJoiner results = new CursorJoiner(mCursor, new String[]{MediaStore.Images.Media._ID}, cr, new String[]{ImageDatabaseHelper.KEY_IMAGE_ID});
+//        Log.d("starting", "loop!");
+
+        ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
+
+        ArrayList<ContentValues> values_array = new ArrayList<ContentValues>();
+
+        ContentProviderOperation operation;
+        ContentValues values;
+        for (CursorJoiner.Result result : results){
+            switch(result){
+                case RIGHT:
+//                    Implies that the image has been deleted from the user's storage
+                    operation = ContentProviderOperation.newDelete(ImageDatabaseContentProvider.CONTENT_URI).withSelection(ImageDatabaseHelper.KEY_IMAGE_ID + " = ?",
+                            new String[] {String.valueOf(cr.getInt(cr.getColumnIndex(ImageDatabaseHelper.KEY_IMAGE_ID)))}).build();
+                    operations.add(operation);
+                    break;
+                case LEFT:
+//                    Log.i("New!!", mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media.DATA)));
+                    values = dbFriendlyFormat(mCursor.getInt(mCursor.getColumnIndex(MediaStore.Images.Media._ID)), mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media.DATA)));
+                    if (values != null){
+                        values_array.add(values);
+                    }
+                    break;
+                case BOTH:
+                    break;
+            }
+        }
+
+        try {
+            getContentResolver().applyBatch(ImageDatabaseContentProvider.PROVIDER_NAME, operations);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        getContentResolver().bulkInsert(ImageDatabaseContentProvider.CONTENT_URI, values_array.toArray(new ContentValues[values_array.size()]));
+        sharedPreferencesManager.setLastPopulatedDate(System.currentTimeMillis());
+        isRunning = false;
+
+    }
+
+    private ContentValues dbFriendlyFormat(int id, String path){
+        Mat m = Highgui.imread(path);
+        float[] colorDesc = this.colorDesc.getDesc(m);
+        m.release();
+        if (!(colorDesc.length == 0)) {
+            ContentValues values = new ContentValues();
+            values.put(ImageDatabaseHelper.KEY_IMAGE_ID, id);
+            values.put(ImageDatabaseHelper.KEY_PATH, path);
+            values.put(ImageDatabaseHelper.KEY_COLOR_DESCRIPTOR, this.colorDesc.serializeFloatArr(colorDesc));
+            return values;
+        }
+        else {
+            return null;
+        }
     }
 }

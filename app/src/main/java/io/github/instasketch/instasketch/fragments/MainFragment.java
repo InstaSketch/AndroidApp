@@ -21,6 +21,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.activities.SearchActivity;
@@ -116,7 +117,7 @@ public class MainFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_main, container, false);
+        RelativeLayout view = (RelativeLayout) inflater.inflate(R.layout.fragment_main, container, false);
         FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab);
         fab.setOnClickListener( new View.OnClickListener() {
             @Override
@@ -137,7 +138,11 @@ public class MainFragment extends Fragment {
             }
         });
 
-        mSketchView = (SketchView) view.findViewById(R.id.sketch_view);
+        Log.i("status sketchPalette", sketchPalette.toString());
+
+        mSketchView = (SketchView) view.findViewById(R.id.sketch_view_frame);
+        Log.i("status mSketchView", mSketchView.toString());
+
         return view;
     }
 
@@ -193,8 +198,10 @@ public class MainFragment extends Fragment {
     }
 
     private void brushSizePicker(){
+        Log.i("size of brush", String.valueOf(mSketchView.getLastBrushSize()));
         BrushSizeChooserFragment brushChooserDialog = BrushSizeChooserFragment.newInstance((int)
                 mSketchView.getLastBrushSize());
+
         brushChooserDialog.setOnNewBrushSizeSelectedListener(new BrushSizeChooserFragment.OnNewBrushSizeSelectedListener() {
             @Override
             public void onNewBrushSizeSelected(float newBrushSize) {

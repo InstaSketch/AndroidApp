@@ -23,8 +23,7 @@
             android:id="@+id/bucket_pics"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/bucket_name"
-            android:text="HomeTown" />
+            android:layout_below="@id/bucket_name"  />
 
 </io.github.instasketch.instasketch.layouts.CheckableLinearLayout>
 

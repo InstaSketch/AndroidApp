@@ -1,16 +1,19 @@
 package io.github.instasketch.instasketch.activities;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.fragments.*;
@@ -21,6 +24,10 @@ public class MainActivity extends AppCompatActivity implements HistoryFragment.O
     protected DrawerLayout mDrawerLayout;
     protected Toolbar mToolBar;
     protected NavigationView mNavView;
+    protected ActionBarDrawerToggle mDrawerToggle;
+
+    private CharSequence mDrawerTitle;
+    private CharSequence mTitle;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -29,23 +36,44 @@ public class MainActivity extends AppCompatActivity implements HistoryFragment.O
         mDrawerLayout = (DrawerLayout) getLayoutInflater().inflate(R.layout.activity_main, null);
         setContentView(mDrawerLayout);
 
+
         mNavView = (NavigationView) mDrawerLayout.findViewById(R.id.navigation_view);
 
         mNavView.setNavigationItemSelectedListener(
-                new NavigationView.OnNavigationItemSelectedListener(){
-                    @Override
-                    public boolean onNavigationItemSelected(MenuItem menuItem) {
-                        mDrawerLayout.closeDrawers();
-                        System.out.println(menuItem.getItemId());
-                        navigate(menuItem);
-                        return true;
-                    }
+            new NavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(MenuItem menuItem) {
+                    mDrawerLayout.closeDrawers();
+                    System.out.println(menuItem.getItemId());
+                    navigate(menuItem);
+                    return true;
                 }
+            }
         );
 
         mToolBar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolBar);
 
+        mTitle = getTitle();
+        mDrawerTitle = "Navigation Drawer";
+
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolBar, R.string.drawer_open, R.string.drawer_close){
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                mToolBar.setTitle(mTitle);
+                invalidateOptionsMenu();
+                syncState();
+            }
+
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                mToolBar.setTitle(mDrawerTitle);
+                invalidateOptionsMenu();
+                syncState();
+            }
+        };
+        mDrawerToggle.setDrawerIndicatorEnabled(true);
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
         FragmentManager fragmentManager = getSupportFragmentManager();
         android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         try {
@@ -58,6 +86,17 @@ public class MainActivity extends AppCompatActivity implements HistoryFragment.O
 
     }
 
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -130,7 +169,11 @@ public class MainActivity extends AppCompatActivity implements HistoryFragment.O
             return;
         }
 
-        fragmentTransaction.replace(R.id.activity_content, fragment).commit();
+        fragmentTransaction.replace(R.id.activity_content, fragment);
+        fragmentTransaction.addToBackStack(fragment.getTag());
+        fragmentTransaction.commit();
+
+
     }
 
     @Override

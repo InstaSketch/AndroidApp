@@ -178,14 +178,25 @@ public class DatabaseFragment extends android.support.v4.app.Fragment implements
         repopulateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            Intent testIntent = new Intent(DatabaseFragment.this.getActivity(), ImageDatabaseIntentService.class);
-            Log.i("Receiver Type: ", dbStatusReceiver.toString());
-            testIntent.putExtra(ImageDatabaseIntentService.RECEIVER_KEY, dbStatusReceiver);
-            testIntent.putExtra(ImageDatabaseIntentService.REQUEST, ImageDatabaseIntentService.REQ_REPOPULATE_DB);
-            DatabaseFragment.this.getActivity().startService(testIntent);
+                Intent testIntent = new Intent(DatabaseFragment.this.getActivity(), ImageDatabaseIntentService.class);
+                Log.i("Receiver Type: ", dbStatusReceiver.toString());
+                testIntent.putExtra(ImageDatabaseIntentService.RECEIVER_KEY, dbStatusReceiver);
+                testIntent.putExtra(ImageDatabaseIntentService.REQUEST, ImageDatabaseIntentService.REQ_REPOPULATE_DB);
+                DatabaseFragment.this.getActivity().startService(testIntent);
             }
         });
 
+        updateBtn.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                Intent testIntent = new Intent(DatabaseFragment.this.getActivity(), ImageDatabaseIntentService.class);
+//                Log.i("Receiver Type: ", dbStatusReceiver.toString());
+                testIntent.putExtra(ImageDatabaseIntentService.RECEIVER_KEY, dbStatusReceiver);
+                testIntent.putExtra(ImageDatabaseIntentService.REQUEST, ImageDatabaseIntentService.REQ_UPDATE_DB);
+                DatabaseFragment.this.getActivity().startService(testIntent);
+            }
+        });
         return view;
 
     }

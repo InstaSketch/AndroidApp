@@ -16,10 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.ListView;
-import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 

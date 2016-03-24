@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
@@ -26,7 +27,7 @@ public class ImageDatabaseContentProvider extends ContentProvider {
     private static final int IMAGES = 10;
     private static final int IMAGE_ID = 20;
 
-    private static final String PROVIDER_NAME = "io.github.instasketch.instasketch.database.ImageDatabaseContentProvider";
+    public static final String PROVIDER_NAME = "io.github.instasketch.instasketch.database.ImageDatabaseContentProvider";
 
     private static final String BASE_PATH = "images";
     public static final Uri CONTENT_URI = Uri.parse("content://" + PROVIDER_NAME + "/" + BASE_PATH);
@@ -92,6 +93,13 @@ public class ImageDatabaseContentProvider extends ContentProvider {
     public String getType(Uri uri) {
         return null;
     }
+
+    /*@Override
+    public Bundle call(String method, String arg, Bundle extras){
+        if (method.equals("update")){
+
+        }
+    }*/
 
     @Nullable
     @Override

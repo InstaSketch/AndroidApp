@@ -55,7 +55,7 @@ public class SearchActivity extends AppCompatActivity implements SearchResultFra
         setContentView(R.layout.activity_search);
 
         Bundle args = getIntent().getExtras();
-        if(!args.getBoolean(INPUT_IS_SKETCH)){
+        if(args == null || !args.getBoolean(INPUT_IS_SKETCH)){
             isSketch = false;
             queryImageURI = args.getParcelable(INPUT_IMAGE_URI);
             queryThumbnailURI = args.getParcelable(INPUT_THUMBNAIL_URI);
