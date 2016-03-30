@@ -6,19 +6,26 @@ package io.github.instasketch.instasketch.fragments;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.ColorInt;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.larswerkman.lobsterpicker.LobsterPicker;
+import com.larswerkman.lobsterpicker.OnColorListener;
+
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.activities.SearchActivity;
 import io.github.instasketch.instasketch.dialogs.BrushSizeChooserFragment;
+import io.github.instasketch.instasketch.dialogs.colorPickerFragment;
 import io.github.instasketch.instasketch.views.SketchView;
 
 
@@ -45,6 +52,7 @@ public class MainFragment extends Fragment {
     private Toolbar sketchPalette;
 
     private SketchView mSketchView;
+    private LobsterPicker mLobsterPicker;
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -101,8 +109,8 @@ public class MainFragment extends Fragment {
                 return false;
             }
         });
-
         mSketchView = (SketchView) view.findViewById(R.id.sketch_view);
+        mLobsterPicker = (LobsterPicker) view.findViewById(R.id.lobsterpicker);
         return view;
     }
 
@@ -112,7 +120,7 @@ public class MainFragment extends Fragment {
             mListener.onFragmentInteraction(uri);
         }
     }
-
+//deprecated
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -153,7 +161,10 @@ public class MainFragment extends Fragment {
                 brushSizePicker();
                 break;
             case R.id.action_erase:
+                erase();
                 break;
+            case R.id.action_changeColor:
+                changeColor();
         }
     }
 
@@ -169,5 +180,33 @@ public class MainFragment extends Fragment {
             }
         });
         brushChooserDialog.show(getFragmentManager(), "Dialog");
+    }
+
+    private void erase() {
+        mSketchView.setPaitColor(Color.TRANSPARENT);
+    }
+
+    private void changeColor() {
+        colorPickerFragment colorPickerDialog =  colorPickerFragment.newInstance();
+        colorPickerDialog.setOnColorSelectedListener(new colorPickerFragment.onColorSelectedListener(){
+            @Override
+            public void onColorSelected(int color) {
+                mSketchView.setPaitColor(color);
+            }
+        });
+        colorPickerDialog.show(getFragmentManager(), "Dialog");
+       /* mLobsterPicker.addOnColorListener(new OnColorListener() {
+            @Override
+            public void onColorChanged(@ColorInt int color) {
+
+            }
+
+            @Override
+            public void onColorSelected(@ColorInt int color) {
+                mSketchView.setPaitColor(color);
+            }
+        });*/
+
+
     }
 }

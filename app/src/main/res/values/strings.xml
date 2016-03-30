@@ -3,7 +3,7 @@
 
     <string name="hello_world">Hello world!</string>
 
-    <string name="navdrawer_home">Home</string>
+    <string name="navdrawer_home">Sketch</string>
     <string name="navdrawer_history">History</string>
     <string name="navdrawer_settings">Settings</string>
 
@@ -20,5 +20,10 @@
     <string name="action_erase">Eraser</string>
     <string name="action_brushsize">Change Brush Size</string>
     <string name="label_brush_size">Size: </string>
+    <string name="action_changeColor">Color </string>
+
+    <string name="action_undo">undo</string>
+
+
     
 </resources>

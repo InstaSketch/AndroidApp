@@ -29,4 +29,11 @@ dependencies {
     compile 'com.squareup.retrofit:converter-gson:2.0.0-beta2'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.android.support:support-v4:23.1.1'
+    compile 'com.github.LarsWerkman:Lobsterpicker:1.0.1'
+}
+
+repositories {
+    maven {
+        url "https://jitpack.io"
+    }
 }
