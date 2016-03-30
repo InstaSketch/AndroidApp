@@ -9,4 +9,9 @@
 
     <integer name="brush_max_size">40</integer>
     <dimen name="fab_margin">16dp</dimen>
+
+    <dimen name="shadow_size">8dp</dimen>
+
+    <dimen name="preview_offset_distance">48dp</dimen>
+    <dimen name="offset_distance">48dp</dimen>
 </resources>

@@ -66,6 +66,7 @@ public class ImageDatabaseIntentService extends IntentService {
     public static final String STATUS_POPULATE_COMPLETED_KEY = "status_populate_completed";
 
     public static final String QUERY_IMAGE_URI = "query_image_uri";
+    public static final String QUERY_DISTANCE_MEASURE = "query_dist_measure";
 
     private SharedPreferencesManager sharedPreferencesManager;
 
@@ -110,12 +111,12 @@ public class ImageDatabaseIntentService extends IntentService {
             case REQ_QUERY_ENTIRE_DB:
                 receiver.send(SearchResultFragment.QUERY_STARTED, Bundle.EMPTY);
                 isRunning = true;
-                imageMatcher(intent.<Uri>getParcelableExtra(QUERY_IMAGE_URI));
+                imageMatcher(intent.<Uri>getParcelableExtra(QUERY_IMAGE_URI), intent.getIntExtra(QUERY_DISTANCE_MEASURE, ColorDescriptorNative.CHISQR));
                 break;
         }
     }
 
-    private void imageMatcher(Uri inputImg){
+    private void imageMatcher(Uri inputImg, int distanceMeasure){
         String path = getRealPathFromURI(inputImg);
         Log.i("searching for", path);
         Mat m = Highgui.imread(path);
@@ -138,11 +139,21 @@ public class ImageDatabaseIntentService extends IntentService {
                     arr = c.deserializeFloatArr(cr.getBlob(descIndex));
                     SearchResult s = new SearchResult();
                     s.setImageUrl(cr.getString(descPath));
-                    s.setSimilarityIndex(c.chiSquared(colorDesc, colorDesc.length, arr, arr.length));
+                    switch(distanceMeasure){
+                        case ColorDescriptorNative.CHISQR:
+                            s.setSimilarityIndex(c.chiSquared(colorDesc, colorDesc.length, arr, arr.length));
+                            break;
+                        case ColorDescriptorNative.BHATTACHARYYA:
+                            s.setSimilarityIndex(c.bhattacharyya(colorDesc, colorDesc.length, arr, arr.length));
+                            break;
+                        case ColorDescriptorNative.INTERSECT:
+                            s.setSimilarityIndex(c.intersect(colorDesc, colorDesc.length, arr, arr.length));
+                            break;
+                    }
                     s.setImageID(cr.getInt(imageID));
 
                     searchResultList.add(s);
-//                    Log.i("comparing with", cr.getString(descPath));
+                    Log.i("comparing with", cr.getString(descPath));
 //                    Log.i("distance!", String.valueOf(c.chiSquared(colorDesc, colorDesc.length, arr, arr.length)));
 
                     cr.moveToNext();

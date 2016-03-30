@@ -3,6 +3,7 @@ package io.github.instasketch.instasketch.database;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.util.Log;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.Set;
 
 import io.github.instasketch.instasketch.activities.AlbumPickerActivity;
+
+import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 /**
  * Created by transfusion on 16-3-17.
@@ -21,12 +24,14 @@ public class SharedPreferencesManager {
     public static final String PREFS_KEY_LAST_POPULATED = "Last_Populated";
 
     private SharedPreferences settings;
+    private SharedPreferences defaultSettings;
     private Editor editor;
     private Context mContext;
 
     public SharedPreferencesManager(Context context){
         this.mContext = context;
         this.settings = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        this.defaultSettings = getDefaultSharedPreferences(context);
         this.editor = settings.edit();
     }
 
@@ -56,5 +61,11 @@ public class SharedPreferencesManager {
     public void setLastPopulatedDate(long date){
         editor.putLong(PREFS_KEY_LAST_POPULATED, date);
         editor.commit();
+    }
+
+    public int getDistanceMeasure(){
+        int s = Integer.valueOf(defaultSettings.getString("distance_measure", "0"));
+        Log.i("preferences called", String.valueOf(s));
+        return s;
     }
 }

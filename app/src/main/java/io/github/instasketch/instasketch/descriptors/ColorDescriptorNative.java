@@ -18,9 +18,9 @@ public class ColorDescriptorNative {
     static {
         System.loadLibrary("myjni");
     }
-    public static int CHISQR = 0;
-    public static int BHATTACHARYYA = 1;
-    public static int INTERSECT = 2;
+    public static final int CHISQR = 0;
+    public static final int BHATTACHARYYA = 1;
+    public static final int INTERSECT = 2;
 
     private native float[] getColorDesc(long matAddr, int h_bins, int s_bins, int v_bins);
 
@@ -88,7 +88,7 @@ public class ColorDescriptorNative {
 // now get the data from the float buffer to the float array,
 // it is actually retrieved from the byte array
         floatBuf.get (floatArray);
-
+        floatBuf.clear();
         return floatArray;
     }
 

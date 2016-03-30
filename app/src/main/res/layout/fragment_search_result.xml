@@ -16,4 +16,8 @@
         android:clickable="true"
         layout="@layout/material_recyclerview_search"/>
 
+    <include
+        android:id="@+id/slidingQueryImage"
+        layout="@layout/slidinglayer_query_image"/>
+
 </FrameLayout>

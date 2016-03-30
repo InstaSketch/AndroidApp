@@ -29,6 +29,8 @@ import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.adapters.RecyclerViewAdapter;
 import io.github.instasketch.instasketch.database.SearchResult;
 
+import io.github.instasketch.instasketch.database.SharedPreferencesManager;
+import io.github.instasketch.instasketch.descriptors.ColorDescriptorNative;
 import io.github.instasketch.instasketch.receivers.ImageDatabaseResultReceiver;
 import io.github.instasketch.instasketch.services.ImageDatabaseIntentService;
 
@@ -50,10 +52,13 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
     private List<SearchResult> searchResultList;
     private resultFragmentInit activityData;
     public ImageDatabaseResultReceiver dbStatusReceiver;
+    private SharedPreferencesManager sharedPreferencesManager;
 
     public static final int QUERY_STARTED = 0;
 //    public static final int QUERY_PROGRESS = 1;
     public static final int QUERY_COMPLETED = 2;
+
+    private int distanceMeasure;
 
     public SearchResultFragment() {
         // Required empty public constructor
@@ -94,6 +99,7 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
 
             public void onClick(DialogInterface dialog, int item) {
                 Toast.makeText(getActivity().getApplicationContext(), items[item], Toast.LENGTH_SHORT).show();
+                populateLocalSearchResults(activityData.getQueryImageURI(), item);
             }
         });
         AlertDialog alert = builder.create();
@@ -119,6 +125,7 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
         setHasOptionsMenu(true);
             setupServiceReceiver();
 //        }
+        sharedPreferencesManager = new SharedPreferencesManager(this.getActivity());
     }
 
     public interface resultFragmentInit {
@@ -137,7 +144,7 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this.getActivity()));
         if(mPage == LOCAL_RESULTS){
 //            sampleText.setText("Local Results");
-            populateLocalSearchResults(activityData.getQueryImageURI());
+            populateLocalSearchResults(activityData.getQueryImageURI(), sharedPreferencesManager.getDistanceMeasure());
             searchResultList = new ArrayList<>();
             mRecyclerViewAdapter = new RecyclerViewAdapter(this.getActivity(), searchResultList, this);
             mRecyclerViewAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
@@ -145,7 +152,7 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
                 public void onItemClick(View view, int position) {
 //                    populateLocalSearchResults(Uri.parse(mRecyclerViewAdapter.getSearchResult(position).getImageUrl()));
                     Uri fullUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "" + mRecyclerViewAdapter.getSearchResult(position).getImageID());
-                    populateLocalSearchResults(fullUri);
+                    populateLocalSearchResults(fullUri, distanceMeasure);
                 }
 
                 @Override
@@ -184,11 +191,14 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
         });
     }
 
-    protected void populateLocalSearchResults(Uri queryImageUri){
+    protected void populateLocalSearchResults(Uri queryImageUri, int distanceMeasure){
 
         Intent testIntent = new Intent(getActivity(), ImageDatabaseIntentService.class);
         testIntent.putExtra(ImageDatabaseIntentService.REQUEST, ImageDatabaseIntentService.REQ_QUERY_ENTIRE_DB);
         testIntent.putExtra(ImageDatabaseIntentService.QUERY_IMAGE_URI, queryImageUri);
+//        testIntent.putExtra(ImageDatabaseIntentService.QUERY_DISTANCE_MEASURE,distanceMeasure);
+        testIntent.putExtra(ImageDatabaseIntentService.QUERY_DISTANCE_MEASURE, distanceMeasure);
+        this.distanceMeasure = distanceMeasure;
         testIntent.putExtra(ImageDatabaseIntentService.RECEIVER_KEY, dbStatusReceiver);
         getActivity().startService(testIntent);
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.wunderlist.slidinglayer.SlidingLayer xmlns:slidingLayer="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="300dp"
+    slidingLayer:shadowDrawable="@drawable/sidebar_shadow"
+    slidingLayer:shadowSize="@dimen/shadow_size"
+    slidingLayer:offsetDistance="@dimen/offset_distance"
+    slidingLayer:previewOffsetDistance="@dimen/preview_offset_distance"
+    slidingLayer:stickTo="bottom"
+    slidingLayer:changeStateOnTap="false">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/ColorPrimary">
+
+
+
+    </RelativeLayout>
+
+</com.wunderlist.slidinglayer.SlidingLayer>

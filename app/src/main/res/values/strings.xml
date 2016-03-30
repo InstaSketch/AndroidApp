@@ -26,9 +26,4 @@
     <string name="drawer_close">Close Navigation Drawer</string>
     <string name="distance_chooser_title">Distance measure</string>
 
-    <string-array name="distance_chooser_choices">
-        <item>Chi-square</item>
-        <item>Bhattacharyya</item>
-        <item>Intersection</item>
-    </string-array>
 </resources>
