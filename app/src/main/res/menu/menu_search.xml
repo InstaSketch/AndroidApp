@@ -8,6 +8,10 @@
         android:title="Choose Distance Measures"
         app:showAsAction="always"/>
 
+    <item android:id="@+id/action_change_layout"
+        android:icon="@drawable/ic_grid_24dp"
+        android:title="View as Grid"
+        app:showAsAction="always"/>
     <!--<item android:id="@+id/action_settings" android:title="@string/action_settings"
         android:orderInCategory="100" app:showAsAction="never" />-->
 </menu>

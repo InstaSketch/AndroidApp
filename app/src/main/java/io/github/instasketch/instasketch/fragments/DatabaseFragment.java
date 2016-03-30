@@ -59,6 +59,9 @@ public class DatabaseFragment extends android.support.v4.app.Fragment implements
     public static final int POPULATE_PROGRESS = 1;
     public static final int POPULATE_ABORTED = 3;
     public static final int POPULATE_COMPLETED = 2;
+    public static final int UPDATE_STARTED = 4;
+    public static final int UPDATE_PROGRESS = 5;
+    public static final int UPDATE_COMPLETED = 6;
 
     public static final String POPULATE_BATCH_COUNT = "populate_batch_count";
 
@@ -153,16 +156,7 @@ public class DatabaseFragment extends android.support.v4.app.Fragment implements
         populateProgressView = (TextView) view.findViewById(R.id.populateProgress);
         populateProgressFilePath = (TextView) view.findViewById(R.id.currentImage);
 
-        Long date = sharedPreferencesManager.getLastPopulatedDate();
-        if (date != -1l){
-            Calendar c = Calendar.getInstance();
-            c.setTimeInMillis(date);
-            SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            lastPopulatedView.setText(s.format(c.getTime()));
-        }
-        else {
-            lastPopulatedView.setText("Never");
-        }
+        showLastPopulatedDate();
 //        v.setText(String.valueOf(imgDB.getImagesCount()));
 
         getLoaderManager().initLoader(IMAGE_LOADER, null, this);
@@ -171,8 +165,7 @@ public class DatabaseFragment extends android.support.v4.app.Fragment implements
         updateBtn = (Button) view.findViewById(R.id.btn_update);
 
         if (ImageDatabaseIntentService.isRunning){
-            repopulateBtn.setAlpha(.5f);
-            repopulateBtn.setEnabled(false);
+            disableDatabaseOperations();
         }
 
         repopulateBtn.setOnClickListener(new View.OnClickListener() {
@@ -210,36 +203,62 @@ public class DatabaseFragment extends android.support.v4.app.Fragment implements
     private void setupServiceReceiver(){
         this.dbStatusReceiver = new ImageDatabaseResultReceiver(new Handler());
 
-        this.dbStatusReceiver.setReceiver(new ImageDatabaseResultReceiver.Receiver(){
+        this.dbStatusReceiver.setReceiver(new ImageDatabaseResultReceiver.Receiver() {
             @Override
-            public void onReceiveResult(int resultCode, Bundle resultData){
-                if (resultCode == POPULATE_STARTED){
+            public void onReceiveResult(int resultCode, Bundle resultData) {
+                if (resultCode == POPULATE_STARTED) {
                     int thisBatch = resultData.getInt(POPULATE_BATCH_COUNT);
                     populateBatchCount = thisBatch;
-                    repopulateBtn.setAlpha(.5f);
-                    repopulateBtn.setEnabled(false);
-                }
-                else if (resultCode == POPULATE_PROGRESS ){
+                    disableDatabaseOperations();
+                } else if (resultCode == POPULATE_PROGRESS) {
                     int imgs = resultData.getInt(ImageDatabaseIntentService.STATUS_POPULATE_PROGRESS_KEY);
-                    populateProgressView.setText(imgs+"/"+populateBatchCount);
+                    populateProgressView.setText(imgs + "/" + populateBatchCount);
                     String s = resultData.getString(ImageDatabaseIntentService.STATUS_POPULATE_PROGRESS_PATH_KEY);
                     populateProgressFilePath.setText(s);
 
-
-                }
-                else if (resultCode == POPULATE_ABORTED){
+                } else if (resultCode == POPULATE_ABORTED) {
                     Log.i("Pop aborted", "aborted");
-                }
-                else if (resultCode == POPULATE_COMPLETED){
+                } else if (resultCode == POPULATE_COMPLETED) {
                     int imgCount = resultData.getInt("images");
-                    repopulateBtn.setAlpha(1f);
-                    repopulateBtn.setEnabled(true);
+                    enableDatabaseOperations();
                     Log.i("Finished populating, ", String.valueOf(imgCount));
+                    showLastPopulatedDate();
+                } else if (resultCode == UPDATE_STARTED) {
+                    disableDatabaseOperations();
+                } else if (resultCode == UPDATE_COMPLETED) {
+                    enableDatabaseOperations();
+                    showLastPopulatedDate();
                 }
             }
         });
     }
 
+    private void disableDatabaseOperations(){
+        repopulateBtn.setAlpha(.5f);
+        repopulateBtn.setEnabled(false);
+        updateBtn.setAlpha(.5f);
+        updateBtn.setEnabled(false);
+    }
+
+    private void enableDatabaseOperations(){
+        repopulateBtn.setAlpha(1f);
+        repopulateBtn.setEnabled(true);
+        updateBtn.setAlpha(1f);
+        updateBtn.setEnabled(true);
+    }
+
+    private void showLastPopulatedDate(){
+        Long date = sharedPreferencesManager.getLastPopulatedDate();
+        if (date != -1l){
+            Calendar c = Calendar.getInstance();
+            c.setTimeInMillis(date);
+            SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            lastPopulatedView.setText(s.format(c.getTime()));
+        }
+        else {
+            lastPopulatedView.setText("Never");
+        }
+    }
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {

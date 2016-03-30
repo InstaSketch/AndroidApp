@@ -22,6 +22,12 @@ JNIEXPORT jfloat JNICALL
 Java_io_github_instasketch_instasketch_descriptors_ColorDescriptorNative_chiSquared(JNIEnv *env, jobject instance,
                                                                                     jfloatArray hist1, jint hist1_size,
                                                                                     jfloatArray hist2, jint hist2_size);
+
+JNIEXPORT jfloat JNICALL
+        Java_io_github_instasketch_instasketch_descriptors_ColorDescriptorNative_bhattacharyya(JNIEnv *env, jobject instance,
+                                                                                            jfloatArray hist1, jint hist1_size,
+                                                                                            jfloatArray hist2, jint hist2_size);
+
 #ifdef __cplusplus
 }
 #endif

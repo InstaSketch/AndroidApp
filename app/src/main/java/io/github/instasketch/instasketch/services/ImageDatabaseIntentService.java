@@ -280,8 +280,8 @@ public class ImageDatabaseIntentService extends IntentService {
         Cursor cr = getContentResolver().query(ImageDatabaseContentProvider.CONTENT_URI, projection, null, null, ImageDatabaseHelper.KEY_IMAGE_ID+" ASC");
 
         CursorJoiner results = new CursorJoiner(mCursor, new String[]{MediaStore.Images.Media._ID}, cr, new String[]{ImageDatabaseHelper.KEY_IMAGE_ID});
-//        Log.d("starting", "loop!");
 
+        receiver.send(DatabaseFragment.UPDATE_STARTED, Bundle.EMPTY);
         ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();
 
         ArrayList<ContentValues> values_array = new ArrayList<ContentValues>();
@@ -315,6 +315,7 @@ public class ImageDatabaseIntentService extends IntentService {
         }
         getContentResolver().bulkInsert(ImageDatabaseContentProvider.CONTENT_URI, values_array.toArray(new ContentValues[values_array.size()]));
         sharedPreferencesManager.setLastPopulatedDate(System.currentTimeMillis());
+        receiver.send(DatabaseFragment.UPDATE_COMPLETED, Bundle.EMPTY);
         isRunning = false;
 
     }

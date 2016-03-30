@@ -53,6 +53,12 @@ float ColorDescriptor::compare_chi_squared(std::vector<float> hist1, std::vector
     return sub.sum()*0.5;
 }
 
+float ColorDescriptor::compare_bhattacharyya(float hist1[], int hist1_size, float hist2[], int hist2_size) {
+    cv::Mat mat1 = cv::Mat(1,hist1_size,CV_32FC1,hist1);
+    cv::Mat mat2 = cv::Mat(1,hist2_size,CV_32FC1, hist2);
+    return cv::compareHist(mat1, mat2, CV_COMP_BHATTACHARYYA );
+}
+
 cv::Mat ColorDescriptor::histogram(cv::Mat image, cv::Mat mask, int h_bins, int s_bins, int v_bins){
     cv::Mat hist;
     int channels[] = {0,1,2};

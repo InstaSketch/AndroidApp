@@ -1,18 +1,24 @@
 package io.github.instasketch.instasketch.fragments;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.opencv.android.OpenCVLoader;
 
@@ -22,6 +28,7 @@ import java.util.List;
 import io.github.instasketch.instasketch.R;
 import io.github.instasketch.instasketch.adapters.RecyclerViewAdapter;
 import io.github.instasketch.instasketch.database.SearchResult;
+
 import io.github.instasketch.instasketch.receivers.ImageDatabaseResultReceiver;
 import io.github.instasketch.instasketch.services.ImageDatabaseIntentService;
 
@@ -35,6 +42,8 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
     public static final int LOCAL_RESULTS = 1;
     public static final int SERVER_RESULTS = 2;
     private int mPage;
+
+    public boolean isList;
 
     private RecyclerView mRecyclerView;
     private RecyclerViewAdapter mRecyclerViewAdapter;
@@ -59,6 +68,40 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+        if (id == R.id.action_change_layout){
+//            Log.i("selected", "changegrid");
+            isList = !isList;
+            mRecyclerView.setLayoutManager(isList ? new LinearLayoutManager(this.getActivity()) : new GridLayoutManager(this.getActivity(), 2));
+            mRecyclerView.setAdapter(mRecyclerViewAdapter);
+            mRecyclerViewAdapter.notifyDataSetChanged();
+        }
+        else if (id == R.id.action_choose_comparison ){
+//            Log.i("choose comparison", "jsadfoi");
+            showDistanceChooser();
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showDistanceChooser(){
+        final CharSequence[] items = getResources().getStringArray(R.array.distance_chooser_choices);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this.getActivity());
+        builder.setTitle(getString(R.string.distance_chooser_title));
+        builder.setItems(items, new DialogInterface.OnClickListener() {
+
+            public void onClick(DialogInterface dialog, int item) {
+                Toast.makeText(getActivity().getApplicationContext(), items[item], Toast.LENGTH_SHORT).show();
+            }
+        });
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+//    private void
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (!OpenCVLoader.initDebug()) {
@@ -72,6 +115,8 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
             this.dbStatusReceiver = savedInstanceState.getParcelable(ImageDatabaseIntentService.RECEIVER_KEY);
         }
         else {*/
+        isList = true;
+        setHasOptionsMenu(true);
             setupServiceReceiver();
 //        }
     }
@@ -92,7 +137,29 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this.getActivity()));
         if(mPage == LOCAL_RESULTS){
 //            sampleText.setText("Local Results");
-            populateLocalSearchResults();
+            populateLocalSearchResults(activityData.getQueryImageURI());
+            searchResultList = new ArrayList<>();
+            mRecyclerViewAdapter = new RecyclerViewAdapter(this.getActivity(), searchResultList, this);
+            mRecyclerViewAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
+                @Override
+                public void onItemClick(View view, int position) {
+//                    populateLocalSearchResults(Uri.parse(mRecyclerViewAdapter.getSearchResult(position).getImageUrl()));
+                    Uri fullUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "" + mRecyclerViewAdapter.getSearchResult(position).getImageID());
+                    populateLocalSearchResults(fullUri);
+                }
+
+                @Override
+                public void onItemLongClick(View view, int position){
+                    Intent intent = new Intent();
+                    Uri fullUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "" + mRecyclerViewAdapter.getSearchResult(position).getImageID());
+
+                    intent.setAction(android.content.Intent.ACTION_VIEW);
+                    intent.setDataAndType(fullUri, "image/*");
+                    startActivity(intent);
+                }
+            });
+
+            mRecyclerView.setAdapter(mRecyclerViewAdapter);
         }
         else if (mPage == SERVER_RESULTS){
 
@@ -117,11 +184,11 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
         });
     }
 
-    protected void populateLocalSearchResults(){
+    protected void populateLocalSearchResults(Uri queryImageUri){
 
         Intent testIntent = new Intent(getActivity(), ImageDatabaseIntentService.class);
         testIntent.putExtra(ImageDatabaseIntentService.REQUEST, ImageDatabaseIntentService.REQ_QUERY_ENTIRE_DB);
-        testIntent.putExtra(ImageDatabaseIntentService.QUERY_IMAGE_URI, activityData.getQueryImageURI());
+        testIntent.putExtra(ImageDatabaseIntentService.QUERY_IMAGE_URI, queryImageUri);
         testIntent.putExtra(ImageDatabaseIntentService.RECEIVER_KEY, dbStatusReceiver);
         getActivity().startService(testIntent);
 
@@ -133,9 +200,7 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
         }
         searchResultList.add(result);
             result.setThumbnailImageUrl();*/
-        searchResultList = new ArrayList<>();
-        mRecyclerViewAdapter = new RecyclerViewAdapter(this.getActivity(), searchResultList);
-        mRecyclerView.setAdapter(mRecyclerViewAdapter);
+
     }
 
 

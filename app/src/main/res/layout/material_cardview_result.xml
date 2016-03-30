@@ -7,6 +7,8 @@
     android:layout_width="match_parent"
     android:layout_height="120dp"
     android:layout_margin="8dp"
+    android:clickable="true"
+    android:focusable="true"
     card_view:cardUseCompatPadding="true"
     card_view:cardCornerRadius="4dp">
 
@@ -16,7 +18,7 @@
         android:padding="16dp">
 
         <ImageView
-            android:id="@+id/thumbnail"
+            android:id="@+id/cardview_list_thumbnail"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_alignParentLeft="true"
@@ -25,11 +27,11 @@
             android:src="@drawable/drawer_background" />
 
         <TextView
-            android:id="@+id/similarityText"
+            android:id="@+id/cardview_list_similarityText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
 
-            android:layout_toRightOf="@+id/thumbnail"
+            android:layout_toRightOf="@+id/cardview_list_thumbnail"
             android:maxLines="3"
             android:padding="8dp"
             android:text="Similarity"
@@ -37,12 +39,12 @@
             android:textSize="15dp" />
 
         <TextView
-            android:id="@+id/similarity"
+            android:id="@+id/cardview_list_similarity"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
 
-            android:layout_toRightOf="@+id/thumbnail"
-            android:layout_below="@id/similarityText"
+            android:layout_toRightOf="@+id/cardview_list_thumbnail"
+            android:layout_below="@id/cardview_list_similarityText"
             android:maxLines="3"
             android:padding="8dp"
             android:text="dafdafda"

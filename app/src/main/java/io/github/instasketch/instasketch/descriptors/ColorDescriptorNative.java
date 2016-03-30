@@ -18,10 +18,17 @@ public class ColorDescriptorNative {
     static {
         System.loadLibrary("myjni");
     }
+    public static int CHISQR = 0;
+    public static int BHATTACHARYYA = 1;
+    public static int INTERSECT = 2;
 
     private native float[] getColorDesc(long matAddr, int h_bins, int s_bins, int v_bins);
 
     public native float chiSquared(float[] hist1, int hist1_size, float[] hist2, int hist2_size);
+
+    public native float bhattacharyya(float[] hist1, int hist1_size, float[] hist2, int hist2_size);
+
+    public native float intersect(float[] hist1, int hist1_size, float[] hist2, int hist2_size);
 
     public ColorDescriptorNative(int h_bins, int s_bins, int v_bins){
         this.h_bins = h_bins;
