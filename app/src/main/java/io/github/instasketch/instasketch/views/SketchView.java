@@ -3,6 +3,7 @@ package io.github.instasketch.instasketch.views;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
@@ -28,8 +29,8 @@ public class SketchView extends View {
 
     private Path drawPath;
     private Paint canvasPaint, drawPaint;
-    private int paintColor = 0xFF660000;
-    private Canvas drawCanvas;
+    private int paintColor = 0xff000000;
+    private Canvas drawCanvas ;
     private Bitmap canvasBitmap;
     private float currentBrushSize, lastBrushSize;
 
@@ -53,6 +54,10 @@ public class SketchView extends View {
         init();
     }
 
+    public void erase() {
+        init();
+    }
+
     private void init(){
         currentBrushSize = getResources().getInteger(R.integer.medium_size);
         lastBrushSize = currentBrushSize;
@@ -65,8 +70,10 @@ public class SketchView extends View {
         drawPaint.setStrokeJoin(Paint.Join.ROUND);
         drawPaint.setStrokeCap(Paint.Cap.BUTT);
 
+
         canvasPaint = new Paint(Paint.DITHER_FLAG);
     }
+
     /*private void init(AttributeSet attrs, int defStyle) {
         // Load attributes
         final TypedArray a = getContext().obtainStyledAttributes(
@@ -155,6 +162,7 @@ public class SketchView extends View {
 
         //apply bitmap to graphic to start drawing.
         drawCanvas = new Canvas(canvasBitmap);
+        drawCanvas.drawColor(Color.TRANSPARENT);
     }
 
     @Override
@@ -269,6 +277,13 @@ public class SketchView extends View {
         drawPaint.setStrokeWidth(newSize);
 
     }
+
+    public void setPaitColor(int color) {
+        drawPaint.setColor(color);
+    }
+
+    public float getPaitColor() { return paintColor; }
+
 
     public void setLastBrushSize(float newSize){
         lastBrushSize = newSize;
