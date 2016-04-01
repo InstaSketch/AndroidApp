@@ -131,3 +131,57 @@ std::vector<float> ColorDescriptor::describe(cv::Mat image, int h_bins, int s_bi
 //    return image;
     return finalHist;
 }
+
+std::vector<float> ColorDescriptor::describe_sketch(cv::Mat image, int h_bins, int s_bins, int v_bins, int threshold){
+//    image must be in BGRA format!!!!
+    if (image.empty()){
+        return std::vector<float>();
+    }
+
+    int rows = image.rows;
+    int cols = image.cols;
+
+    int cX = cols*0.5;
+    int cY = rows*0.5;
+
+    std::vector <i4tuple> v;
+    v.push_back(i4tuple(0, cX, 0, cY));
+    v.push_back(i4tuple(cX, cols, 0, cY));
+    v.push_back(i4tuple(cX, cols, cY, rows));
+    v.push_back(i4tuple(0, cX, cY, rows));
+
+    int axesX = (cols*0.75)/2;
+    int axesY = (rows*0.75)/2;
+
+    cv::Mat ellipMask = cv::Mat(rows, cols, CV_8UC1, cv::Scalar(0));
+    cv::ellipse(ellipMask, cv::Point(cX, cY), cv::Point(axesX, axesY), 0,0,360, cv::Scalar(255,255,255), -1);
+
+    cv::Mat transparencyMask;
+    cv::Scalar lowerb = cv::Scalar(0,0,0,0);
+    cv::Scalar upperb = cv::Scalar(180,255,255,threshold);
+
+    cv::inRange(image, lowerb, upperb, transparencyMask);
+    transparencyMask = 255-transparencyMask;
+
+    cv::cvtColor(image, image, CV_BGR2HSV);
+
+    std::vector<float> finalHist, localHist;
+    for(std::vector<i4tuple>::iterator it = v.begin(); it != v.end(); ++it) {
+        cv::Mat cornerMask = cv::Mat(rows, cols, CV_8UC1, cv::Scalar(0));
+        cv::rectangle(cornerMask, cv::Point(std::get<0>(*it), std::get<2>(*it)), cv::Point(std::get<1>(*it), std::get<3>(*it)), cv::Scalar(255, 255, 255), -1);
+        cornerMask = 255-cornerMask;
+
+        cv::subtract(transparencyMask, cornerMask, cornerMask);
+        cv::subtract(cornerMask, ellipMask, cornerMask);
+
+        localHist = flatten_vec(histogram(image, cornerMask, h_bins, s_bins, v_bins), h_bins, s_bins, v_bins);
+        finalHist.insert(finalHist.end(), localHist.begin(), localHist.end() );
+
+    }
+
+    cv::subtract(transparencyMask, 255-ellipMask, ellipMask);
+    localHist = flatten_vec(histogram(image, ellipMask, h_bins, s_bins, v_bins), h_bins, s_bins, v_bins);
+    finalHist.insert(finalHist.end(), localHist.begin(), localHist.end() );
+    return finalHist;
+
+}

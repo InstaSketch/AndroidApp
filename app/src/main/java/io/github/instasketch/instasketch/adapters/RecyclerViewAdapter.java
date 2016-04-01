@@ -128,12 +128,18 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         return (searchResultList == null ? 0 : searchResultList.size());
     }
 
-    public void swap(List<SearchResult> searchResults, int sortMethod){
+    public void swap(List<SearchResult> searchResults, int sortMethod, final boolean reverse){
         searchResultList.clear();
         Collections.sort(searchResults, new Comparator<SearchResult>(){
             @Override
             public int compare(SearchResult lhs, SearchResult rhs) {
-                return Float.compare(lhs.getSimilarityIndex(),rhs.getSimilarityIndex());
+                if (!reverse){
+                    return Float.compare(lhs.getSimilarityIndex(),rhs.getSimilarityIndex());
+                }
+                else {
+                    return Float.compare(rhs.getSimilarityIndex(), lhs.getSimilarityIndex());
+                }
+
             }
 
         });

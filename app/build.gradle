@@ -84,4 +84,5 @@ dependencies {
     compile 'com.android.support:support-v4:23.2.0'
     compile 'com.wunderlist:sliding-layer:1.2.5'
     compile 'com.google.code.gson:gson'
+    compile 'com.larswerkman:lobsterpicker:1.0.1'
 }

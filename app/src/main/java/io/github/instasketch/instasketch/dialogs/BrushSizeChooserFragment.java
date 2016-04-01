@@ -76,6 +76,7 @@ public class BrushSizeChooserFragment extends DialogFragment {
             currentValue = (TextView)dialogView.findViewById(R.id.text_view_brush_size);
             if (currentBrushSize > 0){
                 currentValue.setText(getResources().getString(R.string.label_brush_size) + currentBrushSize);
+                ((SeekBar) dialogView.findViewById(R.id.seek_bar_brush_size)).setProgress(currentBrushSize);
             }
 
             brushSizeSeekBar = (SeekBar)dialogView.findViewById(R.id.seek_bar_brush_size);

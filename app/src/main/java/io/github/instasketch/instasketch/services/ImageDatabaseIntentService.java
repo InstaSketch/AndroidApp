@@ -17,6 +17,7 @@ import android.util.Log;
 
 import org.opencv.core.Mat;
 import org.opencv.highgui.Highgui;
+import org.opencv.android.Utils;
 
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import io.github.instasketch.instasketch.activities.AlbumPickerActivity;
+import io.github.instasketch.instasketch.activities.SearchActivity;
 import io.github.instasketch.instasketch.database.ImageDatabaseContentProvider;
 import io.github.instasketch.instasketch.database.ImageDatabaseHelper;
 import io.github.instasketch.instasketch.database.SearchResult;
@@ -67,6 +69,7 @@ public class ImageDatabaseIntentService extends IntentService {
 
     public static final String QUERY_IMAGE_URI = "query_image_uri";
     public static final String QUERY_DISTANCE_MEASURE = "query_dist_measure";
+    public static final String QUERY_IS_SKETCH = "query_is_sketch";
 
     private SharedPreferencesManager sharedPreferencesManager;
 
@@ -111,17 +114,32 @@ public class ImageDatabaseIntentService extends IntentService {
             case REQ_QUERY_ENTIRE_DB:
                 receiver.send(SearchResultFragment.QUERY_STARTED, Bundle.EMPTY);
                 isRunning = true;
-                imageMatcher(intent.<Uri>getParcelableExtra(QUERY_IMAGE_URI), intent.getIntExtra(QUERY_DISTANCE_MEASURE, ColorDescriptorNative.CHISQR));
+                imageMatcher(intent.<Uri>getParcelableExtra(QUERY_IMAGE_URI), intent.getIntExtra(QUERY_DISTANCE_MEASURE, ColorDescriptorNative.CHISQR),
+                        intent.getBooleanExtra(QUERY_IS_SKETCH, false));
                 break;
         }
     }
 
-    private void imageMatcher(Uri inputImg, int distanceMeasure){
-        String path = getRealPathFromURI(inputImg);
+    private void imageMatcher(Uri inputImg, int distanceMeasure, boolean isSketch){
+        String path;
+        if (!isSketch){
+            path = getRealPathFromURI(inputImg);
+        }
+        else {
+            path = inputImg.getPath();
+        }
         Log.i("searching for", path);
-        Mat m = Highgui.imread(path);
+        Mat m = Highgui.imread(path, Highgui.CV_LOAD_IMAGE_UNCHANGED);
         ColorDescriptorNative c = new ColorDescriptorNative(8,12,5);
-        float[] colorDesc = c.getDesc(m);
+        float[] colorDesc;
+        if (isSketch){
+            colorDesc = c.getSketchDesc(m);
+            Log.i("desc", String.valueOf(colorDesc.length));
+        }
+        else {
+            colorDesc = c.getDesc(m);
+            Log.i("desc", String.valueOf(colorDesc.length));
+        }
         float[] arr;
         m.release();
         if (!(colorDesc.length == 0)){

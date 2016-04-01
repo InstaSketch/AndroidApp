@@ -30,6 +30,8 @@ public class ColorDescriptorNative {
 
     public native float intersect(float[] hist1, int hist1_size, float[] hist2, int hist2_size);
 
+    public native float[] getSketchColorDesc(long matAddr, int h_bins, int s_bins, int v_bins, int threshold);
+
     public ColorDescriptorNative(int h_bins, int s_bins, int v_bins){
         this.h_bins = h_bins;
         this.s_bins = s_bins;
@@ -38,6 +40,11 @@ public class ColorDescriptorNative {
 
     public float[] getDesc(Mat m){
         return getColorDesc(m.getNativeObjAddr(), this.h_bins, this.s_bins, this.v_bins);
+    }
+
+    public float[] getSketchDesc(Mat m){
+        return getSketchColorDesc(m.getNativeObjAddr(), this.h_bins, this.s_bins, this.v_bins, 100);
+
     }
 
     /*public byte[] serializeFloatArr(float[] desc) throws IOException {

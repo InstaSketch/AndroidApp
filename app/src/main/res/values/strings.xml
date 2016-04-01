@@ -18,6 +18,8 @@
     <string name="title_activity_global_preferences">Settings</string>
 
     <string name="action_erase">Eraser</string>
+    <string name="action_change_color">Change Color</string>
+    <string name="action_undo">Undo</string>
     <string name="action_brushsize">Change Brush Size</string>
     <string name="label_brush_size">Size: </string>
     <string name="title_activity_album_picker">AlbumPickerActivity</string>

@@ -18,6 +18,11 @@ JNIEXPORT jfloatArray JNICALL
                                                                                  jobject instance,
                                                                                  jlong matAddr, jint h_bins, jint s_bins, jint v_bins);
 
+JNIEXPORT jfloatArray JNICALL
+        Java_io_github_instasketch_instasketch_descriptors_ColorDescriptorNative_getSketchColorDesc(JNIEnv *env,
+                                                                                                    jobject instance,
+                                                                                                    jlong matAddr, jint h_bins, jint s_bins, jint v_bins, jint threshold);
+
 JNIEXPORT jfloat JNICALL
 Java_io_github_instasketch_instasketch_descriptors_ColorDescriptorNative_chiSquared(JNIEnv *env, jobject instance,
                                                                                     jfloatArray hist1, jint hist1_size,

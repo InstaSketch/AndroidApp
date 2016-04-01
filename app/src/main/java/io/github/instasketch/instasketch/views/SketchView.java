@@ -3,58 +3,49 @@ package io.github.instasketch.instasketch.views;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import io.github.instasketch.instasketch.R;
 
-/**
- * TODO: document your custom view class.
- */
 public class SketchView extends View {
-    /*private String mExampleString; // TODO: use a default from R.string...
-    private int mExampleColor = Color.RED; // TODO: use a default from R.color...
-    private float mExampleDimension = 0; // TODO: use a default from R.dimen...
-    private Drawable mExampleDrawable;
-
-    private TextPaint mTextPaint;
-    private float mTextWidth;
-    private float mTextHeight;
-*/
 
     private Path drawPath;
     private Paint canvasPaint, drawPaint;
-    private int paintColor = 0xff000000;
-    private Canvas drawCanvas ;
+    private int paintColor = 0xFF660000;
+    private Canvas drawCanvas;
     private Bitmap canvasBitmap;
     private float currentBrushSize, lastBrushSize;
+    private Context mContext;
 
+    private boolean eraseMode = false;
 
 
     public SketchView(Context context) {
         super(context);
-//        init(null, 0);
+        this.mContext = context;
         init();
     }
 
     public SketchView(Context context, AttributeSet attrs) {
         super(context, attrs);
-//        init(attrs, 0);
+        this.mContext = context;
         init();
     }
 
     public SketchView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-//        init(attrs, defStyle);
-        init();
-    }
-
-    public void erase() {
+        this.mContext = context;
         init();
     }
 
@@ -70,79 +61,8 @@ public class SketchView extends View {
         drawPaint.setStrokeJoin(Paint.Join.ROUND);
         drawPaint.setStrokeCap(Paint.Cap.BUTT);
 
-
         canvasPaint = new Paint(Paint.DITHER_FLAG);
     }
-
-    /*private void init(AttributeSet attrs, int defStyle) {
-        // Load attributes
-        final TypedArray a = getContext().obtainStyledAttributes(
-                attrs, R.styleable.SketchView, defStyle, 0);
-
-        mExampleString = a.getString(
-                R.styleable.SketchView_exampleString);
-        mExampleColor = a.getColor(
-                R.styleable.SketchView_exampleColor,
-                mExampleColor);
-        // Use getDimensionPixelSize or getDimensionPixelOffset when dealing with
-        // values that should fall on pixel boundaries.
-        mExampleDimension = a.getDimension(
-                R.styleable.SketchView_exampleDimension,
-                mExampleDimension);
-
-        if (a.hasValue(R.styleable.SketchView_exampleDrawable)) {
-            mExampleDrawable = a.getDrawable(
-                    R.styleable.SketchView_exampleDrawable);
-            mExampleDrawable.setCallback(this);
-        }
-
-        a.recycle();
-
-        // Set up a default TextPaint object
-        mTextPaint = new TextPaint();
-        mTextPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-        mTextPaint.setTextAlign(Paint.Align.LEFT);
-
-        // Update TextPaint and text measurements from attributes
-        invalidateTextPaintAndMeasurements();
-    }
-
-    private void invalidateTextPaintAndMeasurements() {
-        mTextPaint.setTextSize(mExampleDimension);
-        mTextPaint.setColor(mExampleColor);
-        mTextWidth = mTextPaint.measureText(mExampleString);
-
-        Paint.FontMetrics fontMetrics = mTextPaint.getFontMetrics();
-        mTextHeight = fontMetrics.bottom;
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-        // TODO: consider storing these as member variables to reduce
-        // allocations per draw cycle.
-        int paddingLeft = getPaddingLeft();
-        int paddingTop = getPaddingTop();
-        int paddingRight = getPaddingRight();
-        int paddingBottom = getPaddingBottom();
-
-        int contentWidth = getWidth() - paddingLeft - paddingRight;
-        int contentHeight = getHeight() - paddingTop - paddingBottom;
-
-        // Draw the text.
-        canvas.drawText(mExampleString,
-                paddingLeft + (contentWidth - mTextWidth) / 2,
-                paddingTop + (contentHeight + mTextHeight) / 2,
-                mTextPaint);
-
-        // Draw the example drawable on top of the text.
-        if (mExampleDrawable != null) {
-            mExampleDrawable.setBounds(paddingLeft, paddingTop,
-                    paddingLeft + contentWidth, paddingTop + contentHeight);
-            mExampleDrawable.draw(canvas);
-        }
-    }*/
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -156,13 +76,10 @@ public class SketchView extends View {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         //create canvas of certain device size.
         super.onSizeChanged(w, h, oldw, oldh);
-
         //create Bitmap of certain w,h
         canvasBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-
         //apply bitmap to graphic to start drawing.
         drawCanvas = new Canvas(canvasBitmap);
-        drawCanvas.drawColor(Color.TRANSPARENT);
     }
 
     @Override
@@ -189,84 +106,6 @@ public class SketchView extends View {
         invalidate();
         return true;
     }
-    /**
-     * Gets the example string attribute value.
-     *
-     * @return The example string attribute value.
-     */
-    /*public String getExampleString() {
-        return mExampleString;
-    }*/
-
-    /**
-     * Sets the view's example string attribute value. In the example view, this string
-     * is the text to draw.
-     *
-     * @param exampleString The example string attribute value to use.
-     */
-    /*public void setExampleString(String exampleString) {
-        mExampleString = exampleString;
-        invalidateTextPaintAndMeasurements();
-    }*/
-
-    /**
-     * Gets the example color attribute value.
-     *
-     * @return The example color attribute value.
-     */
-    /*public int getExampleColor() {
-        return mExampleColor;
-    }*/
-
-    /**
-     * Sets the view's example color attribute value. In the example view, this color
-     * is the font color.
-     *
-     * @param exampleColor The example color attribute value to use.
-     */
-    /*public void setExampleColor(int exampleColor) {
-        mExampleColor = exampleColor;
-        invalidateTextPaintAndMeasurements();
-    }*/
-
-    /**
-     * Gets the example dimension attribute value.
-     *
-     * @return The example dimension attribute value.
-     */
-    /*public float getExampleDimension() {
-        return mExampleDimension;
-    }*/
-
-    /**
-     * Sets the view's example dimension attribute value. In the example view, this dimension
-     * is the font size.
-     *
-     * @param exampleDimension The example dimension attribute value to use.
-     */
-    /*public void setExampleDimension(float exampleDimension) {
-        mExampleDimension = exampleDimension;
-        invalidateTextPaintAndMeasurements();
-    }*/
-
-    /**
-     * Gets the example drawable attribute value.
-     *
-     * @return The example drawable attribute value.
-     */
-    /*public Drawable getExampleDrawable() {
-        return mExampleDrawable;
-    }*/
-
-    /**
-     * Sets the view's example drawable attribute value. In the example view, this drawable is
-     * drawn above the text.
-     *
-     * @param exampleDrawable The example drawable attribute value to use.
-     */
-    /*public void setExampleDrawable(Drawable exampleDrawable) {
-        mExampleDrawable = exampleDrawable;
-    }*/
 
     //    The methods below implement the functionality of the sketch palette
     public void setBrushSize(float newSize){
@@ -278,13 +117,42 @@ public class SketchView extends View {
 
     }
 
-    public void setPaitColor(int color) {
+    public void setPaintColor(int color) {
         drawPaint.setColor(color);
     }
 
-    public float getPaitColor() { return paintColor; }
+    public float getPaintColor() { return paintColor; }
 
 
+    public String dumpToFile() {
+        File outputDir = mContext.getCacheDir(); // context being the Activity pointer
+        FileOutputStream fo = null;
+        try {
+            File outputFile = File.createTempFile("sketch", ".png", outputDir);
+            fo = new FileOutputStream(outputFile);
+            canvasBitmap.compress(Bitmap.CompressFormat.PNG, 80, fo);
+            fo.close();
+            return outputFile.getAbsolutePath();
+        }
+        catch (Exception e){
+
+        }
+        return null;
+    }
+
+    public void setErase(boolean eraseMode){
+        this.eraseMode = eraseMode;
+        if(eraseMode){
+            drawPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+        }
+        else {
+            drawPaint.setXfermode(null);
+        }
+    }
+
+    public boolean isEraseMode(){
+        return eraseMode;
+    }
     public void setLastBrushSize(float newSize){
         lastBrushSize = newSize;
     }

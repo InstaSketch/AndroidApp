@@ -58,6 +58,7 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
 //    public static final int QUERY_PROGRESS = 1;
     public static final int QUERY_COMPLETED = 2;
 
+    private Uri queryImageUri;
     private int distanceMeasure;
 
     public SearchResultFragment() {
@@ -99,7 +100,7 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
 
             public void onClick(DialogInterface dialog, int item) {
                 Toast.makeText(getActivity().getApplicationContext(), items[item], Toast.LENGTH_SHORT).show();
-                populateLocalSearchResults(activityData.getQueryImageURI(), item);
+                populateLocalSearchResults(queryImageUri, item);
             }
         });
         AlertDialog alert = builder.create();
@@ -125,6 +126,7 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
         setHasOptionsMenu(true);
             setupServiceReceiver();
 //        }
+
         sharedPreferencesManager = new SharedPreferencesManager(this.getActivity());
     }
 
@@ -144,15 +146,16 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this.getActivity()));
         if(mPage == LOCAL_RESULTS){
 //            sampleText.setText("Local Results");
-            populateLocalSearchResults(activityData.getQueryImageURI(), sharedPreferencesManager.getDistanceMeasure());
+            queryImageUri = activityData.getQueryImageURI();
+            populateLocalSearchResults(queryImageUri, sharedPreferencesManager.getDistanceMeasure());
             searchResultList = new ArrayList<>();
             mRecyclerViewAdapter = new RecyclerViewAdapter(this.getActivity(), searchResultList, this);
             mRecyclerViewAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
                 @Override
                 public void onItemClick(View view, int position) {
 //                    populateLocalSearchResults(Uri.parse(mRecyclerViewAdapter.getSearchResult(position).getImageUrl()));
-                    Uri fullUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "" + mRecyclerViewAdapter.getSearchResult(position).getImageID());
-                    populateLocalSearchResults(fullUri, distanceMeasure);
+                    queryImageUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "" + mRecyclerViewAdapter.getSearchResult(position).getImageID());
+                    populateLocalSearchResults(queryImageUri, distanceMeasure);
                 }
 
                 @Override
@@ -185,7 +188,7 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
 //                    Log.i)
                 }
                 else if (resultCode == QUERY_COMPLETED){
-                    mRecyclerViewAdapter.swap((List<SearchResult>) resultData.get(RESULTS_LIST), RecyclerViewAdapter.SORT_BY_COLOR);
+                    mRecyclerViewAdapter.swap((List<SearchResult>) resultData.get(RESULTS_LIST), RecyclerViewAdapter.SORT_BY_COLOR, distanceMeasure == ColorDescriptorNative.INTERSECT );
                 }
             }
         });
@@ -200,6 +203,7 @@ public class SearchResultFragment extends android.support.v4.app.Fragment {
         testIntent.putExtra(ImageDatabaseIntentService.QUERY_DISTANCE_MEASURE, distanceMeasure);
         this.distanceMeasure = distanceMeasure;
         testIntent.putExtra(ImageDatabaseIntentService.RECEIVER_KEY, dbStatusReceiver);
+        testIntent.putExtra(ImageDatabaseIntentService.QUERY_IS_SKETCH, activityData.isSketch());
         getActivity().startService(testIntent);
 
         /*searchResultList = new ArrayList<>();

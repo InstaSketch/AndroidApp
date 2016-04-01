@@ -17,4 +17,6 @@
         android:entryValues="@array/distance_chooser_choice_values"
         android:defaultValue="1"
         android:summary="Method of comparing similarity between images. (Leave as default)" />
+
+
 </PreferenceScreen>
